@@ -1,5 +1,8 @@
 name: Sync Syllabus to Syllabi Repository
 
+env:
+  SYLLABI_SYNC_TOKEN: ${{ secrets.SYLLABI_SYNC_TOKEN }}
+
 on:
   push:
     branches: [main]
@@ -11,6 +14,7 @@ on:
 jobs:
   sync-syllabus:
     runs-on: ubuntu-latest
+    environment: default
     
     steps:
     - name: Checkout source repository
