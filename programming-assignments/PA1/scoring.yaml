@@ -1,0 +1,48 @@
+# Scoring Configuration for PA1 - PCA Implementation
+# Advanced class scoring - emphasizes end-to-end functionality and validation
+
+# Default points for any test not specifically mentioned
+default_points: 3
+
+# Individual test scoring - emphasizes complete functionality and validation
+test_scores:
+  # HIGHEST PRIORITY - Complete system validation (50 points total)
+  test_against_sklearn: 25        # Critical - proves they understand PCA holistically
+  test_pca_complete: 25           # Complete pipeline integration
+  
+  # HIGH PRIORITY - Advanced functionality (20 points total)
+  test_transform_new_data: 10     # Essential for real-world usage
+  test_inverse_transform: 10      # Shows understanding of mathematical reversibility
+  
+  # MEDIUM PRIORITY - Building blocks (20 points total)
+  test_center_data: 4             # Basic but important
+  test_compute_svd_decomposition: 4  # Using numpy correctly, understanding params
+  test_extract_principal_components: 4  # Matrix operations understanding
+  test_calculate_explained_variance: 4   # Statistical interpretation
+  test_transform_data: 4          # Direct matrix multiplication
+  
+  # LOWER PRIORITY - Edge cases and robustness (10 points total)
+  test_edge_cases: 10             # Important for robustness but not core functionality
+
+# Group-based scoring for reference (individual scores above take precedence)
+groups:
+  core_system:
+    patterns:
+      - "test_pca_complete"
+      - "test_against_sklearn"  
+    description: "Complete system validation - highest priority"
+    
+  advanced_usage:
+    patterns:
+      - "test_transform_new_data"
+      - "test_inverse_transform"
+    description: "Real-world PCA usage patterns"
+    
+  building_blocks:
+    patterns:
+      - "test_center_data"
+      - "test_compute_svd_decomposition"
+      - "test_extract_principal_components" 
+      - "test_calculate_explained_variance"
+      - "test_transform_data"
+    description: "Individual component understanding"
