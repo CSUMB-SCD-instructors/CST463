@@ -6,8 +6,9 @@ This script can find and run test files in a specified assignment directory,
 supporting multiple test file patterns and generating YAML output.
 
 Usage:
-    python run_tests.py PA1                    # Run tests in PA1 directory
-    python run_tests.py PA1 --yaml-only       # Generate YAML output only
+    python run_tests.py PA1                      # Output YAML to stdout (default)
+    python run_tests.py PA1 --verbose           # Show detailed output + YAML
+    python run_tests.py PA1 --output results.yaml  # Save YAML to file
     python run_tests.py PA1 --pattern "test_*.py"  # Use custom pattern
 """
 
@@ -20,10 +21,14 @@ import yaml
 from pathlib import Path
 import inspect
 import subprocess
+import logging
+
+# Set up project logger
+log = logging.getLogger('test_runner')
 
 
 class TestRunner:
-    def __init__(self, assignment_dir, test_patterns=None, verbose=True):
+    def __init__(self, assignment_dir, test_patterns=None, verbose=True, scoring_file=None):
         self.assignment_dir = Path(assignment_dir)
         self.test_patterns = test_patterns or [
             "tests.py",
@@ -34,6 +39,59 @@ class TestRunner:
         ]
         self.verbose = verbose
         self.results = []
+        self.scoring_config = self.load_scoring_config(scoring_file)
+    
+    def load_scoring_config(self, scoring_file=None):
+        """Load scoring configuration from YAML file."""
+        if scoring_file:
+            config_path = Path(scoring_file)
+        else:
+            # Default to scoring.yaml in assignment directory
+            config_path = self.assignment_dir / "scoring.yaml"
+        
+        if not config_path.exists():
+            if self.verbose and scoring_file:
+                print(f"Warning: Scoring file '{config_path}' not found. Using default scoring.")
+            return None
+        
+        try:
+            with open(config_path, 'r') as f:
+                config = yaml.safe_load(f)
+            if self.verbose:
+                print(f"Loaded scoring configuration from: {config_path}")
+            return config
+        except Exception as e:
+            if self.verbose:
+                print(f"Warning: Failed to load scoring config: {e}. Using default scoring.")
+            return None
+    
+    def calculate_test_score(self, test_name, status):
+        """Calculate score for a single test based on scoring configuration."""
+        if not self.scoring_config:
+            # Default scoring: 1 point for pass, 0 for fail
+            return 1.0 if status == "PASSED" else 0.0
+        
+        # Check for specific test scoring
+        test_scores = self.scoring_config.get('test_scores', {})
+        if test_name in test_scores:
+            score_config = test_scores[test_name]
+            if isinstance(score_config, (int, float)):
+                return float(score_config) if status == "PASSED" else 0.0
+            elif isinstance(score_config, dict):
+                return float(score_config.get('points', 1.0)) if status == "PASSED" else 0.0
+        
+        # Check for group scoring
+        groups = self.scoring_config.get('groups', {})
+        for group_name, group_config in groups.items():
+            patterns = group_config.get('patterns', [])
+            for pattern in patterns:
+                if pattern in test_name or test_name.startswith(pattern.replace('*', '')):
+                    points = group_config.get('points', 1.0)
+                    return float(points) if status == "PASSED" else 0.0
+        
+        # Default scoring
+        default_points = self.scoring_config.get('default_points', 1.0)
+        return float(default_points) if status == "PASSED" else 0.0
         
     def find_test_files(self):
         """Find all test files matching the specified patterns."""
@@ -114,19 +172,25 @@ class TestRunner:
                     if self.verbose:
                         print(f"✗ {test_name}: {error_message}")
                 
+                score = self.calculate_test_score(test_name, status)
                 results.append({
                     'test_name': test_name,
                     'test_file': test_file.name,
                     'status': status,
-                    'error_message': error_message
+                    'error_message': error_message,
+                    'points_earned': score,
+                    'points_possible': self.calculate_test_score(test_name, "PASSED")
                 })
         
         except Exception as e:
+            score = self.calculate_test_score('MODULE_IMPORT', 'FAILED')
             results.append({
                 'test_name': 'MODULE_IMPORT',
                 'test_file': test_file.name,
                 'status': 'FAILED',
-                'error_message': f"Failed to import test module: {str(e)}"
+                'error_message': f"Failed to import test module: {str(e)}",
+                'points_earned': score,
+                'points_possible': self.calculate_test_score('MODULE_IMPORT', "PASSED")
             })
         
         finally:
@@ -165,11 +229,14 @@ class TestRunner:
                     test_name = parts[0].split('::')[-1]
                     status = parts[-1]
                     
+                    score = self.calculate_test_score(test_name, status)
                     results.append({
                         'test_name': test_name,
                         'test_file': test_file.name,
                         'status': status,
-                        'error_message': None if status == 'PASSED' else 'See pytest output'
+                        'error_message': None if status == 'PASSED' else 'See pytest output',
+                        'points_earned': score,
+                        'points_possible': self.calculate_test_score(test_name, "PASSED")
                     })
         
         return results
@@ -197,13 +264,21 @@ class TestRunner:
         passed_tests = len([r for r in self.results if r['status'] == 'PASSED'])
         failed_tests = total_tests - passed_tests
         
+        # Calculate scoring totals
+        total_points_earned = sum(r.get('points_earned', 0) for r in self.results)
+        total_points_possible = sum(r.get('points_possible', 0) for r in self.results)
+        score_percentage = round((total_points_earned / total_points_possible * 100) if total_points_possible > 0 else 0, 1)
+        
         summary = {
             'assignment_directory': str(self.assignment_dir),
             'test_summary': {
                 'total_tests': total_tests,
                 'passed_tests': passed_tests,
                 'failed_tests': failed_tests,
-                'success_rate': round((passed_tests / total_tests * 100) if total_tests > 0 else 0, 1)
+                'success_rate': round((passed_tests / total_tests * 100) if total_tests > 0 else 0, 1),
+                'total_points_earned': total_points_earned,
+                'total_points_possible': total_points_possible,
+                'score_percentage': score_percentage
             },
             'test_results': self.results
         }
@@ -215,6 +290,7 @@ class TestRunner:
             print(f"Passed: {passed_tests}")
             print(f"Failed: {failed_tests}")
             print(f"Success rate: {summary['test_summary']['success_rate']}%")
+            print(f"Score: {total_points_earned}/{total_points_possible} ({score_percentage}%)")
         
         return summary
     
@@ -248,16 +324,30 @@ def main():
         help="Test file pattern to search for (can be specified multiple times)"
     )
     parser.add_argument(
-        "--yaml-only", 
+        "--verbose", "-v",
         action="store_true",
-        help="Only generate YAML output, suppress console output"
+        help="Show detailed console output in addition to YAML"
     )
     parser.add_argument(
         "--output", "-o",
-        help="Output YAML filename (default: {assignment}_test_results.yaml)"
+        help="Output YAML to file instead of stdout"
+    )
+    parser.add_argument(
+        "--scoring-file", "-s",
+        help="Path to scoring configuration YAML file (default: {assignment}/scoring.yaml)"
     )
     
     args = parser.parse_args()
+    
+    # Set up logging
+    if args.verbose:
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(levelname)s: %(message)s',
+            stream=sys.stderr  # Send logs to stderr so stdout is clean for YAML
+        )
+    else:
+        logging.basicConfig(level=logging.WARNING, format='%(levelname)s: %(message)s')
     
     # Resolve assignment directory path
     # Try relative to current directory first, then relative to script directory
@@ -275,20 +365,23 @@ def main():
         print(f"  - {(Path(__file__).parent / args.assignment).resolve()}")
         sys.exit(1)
     
-    # Set up test patterns
+    # Set up test patterns and verbosity
     patterns = args.pattern if args.pattern else None
-    verbose = not args.yaml_only
+    verbose = args.verbose
     
     # Create and run test runner
-    runner = TestRunner(assignment_dir, patterns, verbose)
+    runner = TestRunner(assignment_dir, patterns, verbose, args.scoring_file)
     summary = runner.run_all_tests()
     
-    # Save YAML results
-    output_file = args.output or f"{args.assignment}_test_results.yaml"
-    runner.save_yaml_results(output_file)
-    
-    # Print YAML if requested
-    if args.yaml_only:
+    # Output YAML results
+    if args.output:
+        # Save to file
+        with open(args.output, 'w') as f:
+            yaml.dump(summary, f, default_flow_style=False, indent=2)
+        if verbose:
+            print(f"\nResults saved to: {args.output}")
+    else:
+        # Output to stdout by default
         print(yaml.dump(summary, default_flow_style=False, indent=2))
     
     # Exit with appropriate code
