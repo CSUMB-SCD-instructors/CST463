@@ -13,6 +13,69 @@ import student_code
 # UNIT TESTS - Comprehensive test suite
 # ============================================================================
 
+def test_matrix_multiply():
+  """Test custom matrix multiplication implementation"""
+  # Test basic 2x2 multiplication
+  A = np.array([[1, 2], [3, 4]], dtype=float)
+  B = np.array([[5, 6], [7, 8]], dtype=float)
+  C = student_code.matrix_multiply(A, B)
+  expected = np.array([[19, 22], [43, 50]], dtype=float)
+  np.testing.assert_array_almost_equal(C, expected)
+  
+  # Test against numpy's @ operator
+  np.testing.assert_array_almost_equal(C, A @ B)
+  
+  # Test different dimensions
+  A_rect = np.array([[1, 2, 3], [4, 5, 6]], dtype=float)  # 2x3
+  B_rect = np.array([[7, 8], [9, 10], [11, 12]], dtype=float)  # 3x2
+  C_rect = student_code.matrix_multiply(A_rect, B_rect)  # Should be 2x2
+  expected_rect = A_rect @ B_rect
+  np.testing.assert_array_almost_equal(C_rect, expected_rect)
+  
+  # Test matrix-vector multiplication
+  A_vec = np.array([[1, 2], [3, 4]], dtype=float)
+  b_vec = np.array([[5], [6]], dtype=float)  # Column vector
+  c_vec = student_code.matrix_multiply(A_vec, b_vec)
+  expected_vec = A_vec @ b_vec
+  np.testing.assert_array_almost_equal(c_vec, expected_vec)
+  
+  # Test identity matrix
+  I = np.eye(3)
+  X = np.random.randn(3, 4)
+  result = student_code.matrix_multiply(I, X)
+  np.testing.assert_array_almost_equal(result, X)
+
+def test_matrix_multiply_error_cases():
+  """Test matrix multiplication error handling"""
+  A = np.array([[1, 2], [3, 4]])  # 2x2
+  B = np.array([[1], [2], [3]])   # 3x1 - incompatible
+  
+  # Should raise ValueError for incompatible dimensions
+  with pytest.raises(ValueError):
+    student_code.matrix_multiply(A, B)
+
+def test_matrix_multiply_with_pca():
+  """Test that matrix multiplication works correctly in PCA context"""
+  # Generate test data
+  np.random.seed(42)
+  X = np.random.randn(10, 4)
+  
+  # Run PCA with our custom matrix multiplication
+  X_transformed, components, exp_var_ratio, means = student_code.pca_fit_transform(X, n_components=2)
+  
+  # Verify results are reasonable
+  assert X_transformed.shape == (10, 2)
+  assert components.shape == (4, 2)
+  
+  # Test inverse transform using our matrix multiplication
+  X_reconstructed = student_code.pca_inverse_transform(X_transformed, components, means)
+  
+  # Should have same shape as original
+  assert X_reconstructed.shape == X.shape
+  
+  # With only 2 components, reconstruction won't be perfect but should be reasonable
+  # (This is more of a sanity check that our matrix mult didn't break anything)
+
 def test_center_data():
   """Test data centering"""
   X = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=float)

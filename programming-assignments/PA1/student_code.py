@@ -4,6 +4,55 @@ import pandas as pd
 import numpy as np
 
 
+def matrix_multiply(A, B):
+  """
+  Perform matrix multiplication C = A @ B using nested loops.
+  
+  Students must implement this function without using numpy's @ operator
+  or np.dot(). This helps internalize how matrix multiplication works.
+  
+  Parameters:
+  -----------
+  A : numpy.ndarray, shape (m, n)
+      Left matrix
+  B : numpy.ndarray, shape (n, p)  
+      Right matrix
+  
+  Returns:
+  --------
+  C : numpy.ndarray, shape (m, p)
+      Result matrix where C[i,j] = sum(A[i,k] * B[k,j] for k in range(n))
+  
+  Notes:
+  ------
+  - A.shape[1] must equal B.shape[0] for multiplication to be valid
+  - Use nested loops to compute each element C[i,j]
+  - Think about the mathematical definition: C[i,j] = Σ(A[i,k] * B[k,j])
+  """
+  # TODO: Students implement this function
+  # Hint: You'll need three nested loops (i, j, k)
+  # Hint: Initialize result matrix with zeros first
+  
+  # Check dimensions are compatible
+  if A.shape[1] != B.shape[0]:
+    raise ValueError(f"Cannot multiply matrices with shapes {A.shape} and {B.shape}")
+  
+  # Get dimensions
+  m, n = A.shape
+  n2, p = B.shape
+  
+  # Initialize result matrix with zeros
+  C = np.zeros((m, p))
+  
+  # Triple nested loop for matrix multiplication
+  for i in range(m):
+    for j in range(p):
+      for k in range(n):
+        C[i, j] += A[i, k] * B[k, j]
+  
+  return C
+
+
 def load_data(path_to_csv: str) -> np.ndarray:
   df = pd.read_csv(path_to_csv)
   return df.values
@@ -140,7 +189,7 @@ def transform_data(X_centered, components):
   # Matrix multiplication: X_centered @ components
   # Each column of components is a principal component direction
   # Result: each row is a data point in the new coordinate system
-  X_transformed = X_centered @ components
+  X_transformed = matrix_multiply(X_centered, components)
   
   return X_transformed
 
@@ -230,7 +279,7 @@ def pca_inverse_transform(X_transformed, components, feature_means):
       Data reconstructed in original space
   """
   # Project back to original space
-  X_centered_reconstructed = X_transformed @ components.T
+  X_centered_reconstructed = matrix_multiply(X_transformed, components.T)
   
   # Add back the original means
   X_reconstructed = X_centered_reconstructed + feature_means
