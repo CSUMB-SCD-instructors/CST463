@@ -4,8 +4,45 @@
 
 set -e  # Exit on any error
 
+# Load course configuration
+if [ ! -f ".course-config" ]; then
+    echo -e "${RED}Error: .course-config file not found${NC}"
+    echo -e "${RED}This file is required to determine course-specific settings${NC}"
+    exit 1
+fi
+
+source .course-config
+
+# Validate required configuration
+if [ -z "$COURSE_CODE" ]; then
+    echo -e "${RED}Error: COURSE_CODE not set in .course-config${NC}"
+    exit 1
+fi
+
+if [ -z "$COURSE_NAME" ]; then
+    echo -e "${RED}Error: COURSE_NAME not set in .course-config${NC}"
+    exit 1
+fi
+
+# Check for default template values that shouldn't be used
+if [ "$COURSE_CODE" = "CSTXXX" ] || [ "$COURSE_CODE" = "CST334" ]; then
+    echo -e "${RED}Error: COURSE_CODE appears to be a template default value: '$COURSE_CODE'${NC}"
+    echo -e "${RED}Please update .course-config with your actual course code before publishing${NC}"
+    exit 1
+fi
+
+if [ "$COURSE_NAME" = "Course Title" ] || [ "$COURSE_NAME" = "Your Course Name" ]; then
+    echo -e "${RED}Error: COURSE_NAME appears to be a template default value: '$COURSE_NAME'${NC}"
+    echo -e "${RED}Please update .course-config with your actual course name before publishing${NC}"
+    exit 1
+fi
+
+# Check if STUDENT_REPO_URL is defined in .course-config, otherwise use course-based default
+if [ -z "$STUDENT_REPO_URL" ]; then
+    STUDENT_REPO_URL="https://github.com/CSUMB-SCD-instructors/${COURSE_CODE}.git"
+fi
+
 # Configuration
-STUDENT_REPO_URL="https://github.com/CSUMB-SCD-instructors/CST463.git"  # UPDATE THIS
 STUDENT_REMOTE_NAME="student-repo"
 SOURCE_BRANCH="redacted_for_students"
 TARGET_BRANCH="main"  # Branch name in student repository
@@ -17,6 +54,18 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo -e "${YELLOW}Publishing ${SOURCE_BRANCH} to student repository...${NC}"
+echo -e "${YELLOW}Course Configuration:${NC}"
+echo -e "  Course Code: ${GREEN}${COURSE_CODE}${NC}"
+echo -e "  Course Name: ${GREEN}${COURSE_NAME}${NC}"
+echo -e "  Student Repo: ${GREEN}${STUDENT_REPO_URL}${NC}"
+echo ""
+
+# Final safety check with course details
+read -p "Confirm this is the correct course before publishing (y/N): " -r
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo -e "${YELLOW}Publication cancelled - please verify your .course-config settings${NC}"
+    exit 0
+fi
 
 # Verify we're in a git repository
 if [ ! -d ".git" ]; then
@@ -110,12 +159,25 @@ if [ -f ".studentignore" ]; then
         
         if [ -n "$pattern" ]; then
             echo -e "  Excluding: ${pattern}"
+            # Handle absolute paths (starting with /)
+            if [[ "$pattern" == /* ]]; then
+                # Remove leading slash for relative path
+                pattern="${pattern#/}"
+                if [ -d "$pattern" ]; then
+                    rm -rf "$pattern" 2>/dev/null || true
+                elif [ -f "$pattern" ]; then
+                    rm -f "$pattern" 2>/dev/null || true
+                fi
             # Handle directory patterns (ending with /)
-            if [[ "$pattern" == */ ]]; then
+            elif [[ "$pattern" == */ ]]; then
                 rm -rf "${pattern%/}" 2>/dev/null || true
             else
                 # Handle file patterns (use find for glob support)
                 find . -name "$pattern" -delete 2>/dev/null || true
+                # Also try exact match for files
+                if [ -f "$pattern" ]; then
+                    rm -f "$pattern" 2>/dev/null || true
+                fi
             fi
         fi
     done < ".studentignore"
