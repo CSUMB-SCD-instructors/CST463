@@ -286,3 +286,16 @@ def test_edge_cases():
   assert comps_single.shape == (1, 1)
   assert len(ratios_single) == 1
   assert np.isclose(ratios_single[0], 1.0)  # Should explain all variance
+
+if __name__ == "__main__":
+  print("Running PCA tests...")
+  print("For more detailed output, use: pytest tests.py -v")
+  print("=" * 50)
+  
+  # Run pytest programmatically
+  exit_code = pytest.main([__file__, "-v", "--tb=short"])
+  
+  if exit_code == 0:
+    print("\n🎉 All tests passed! Your implementation is working correctly.")
+  else:
+    print("\n❌ Some tests failed. Check your implementation and try again.")
