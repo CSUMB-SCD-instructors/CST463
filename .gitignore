@@ -1,4 +1,5 @@
 .claude/
+__pycache__/
 
 # Compiled objects
 *.o
