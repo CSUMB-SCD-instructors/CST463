@@ -1,0 +1,51 @@
+# Scoring Configuration for PA1 - PCA Implementation
+# Advanced class scoring - emphasizes end-to-end functionality and validation
+
+# Default points for any test not specifically mentioned
+default_points: 3
+
+# Individual test scoring - emphasizes complete functionality and validation
+test_scores:
+  # HIGHEST PRIORITY - Matrix multiplication and complete system validation (55 points total)
+  test_matrix_multiply: 12        # NEW - Core linear algebra understanding
+  test_against_sklearn: 23        # Critical - proves they understand PCA holistically
+  test_pca_complete: 20           # Complete pipeline integration
+  
+  # HIGH PRIORITY - Advanced functionality (18 points total)
+  test_transform_new_data: 9      # Essential for real-world usage
+  test_inverse_transform: 9       # Shows understanding of mathematical reversibility
+  
+  # MEDIUM PRIORITY - Building blocks and matrix operations (20 points total)
+  test_matrix_multiply_error_cases: 5   # NEW - Error handling for matrix ops
+  test_matrix_multiply_with_pca: 4      # NEW - Integration testing
+  test_center_data: 3             # Basic but important
+  test_compute_svd_decomposition: 3  # Using numpy correctly, understanding params
+  test_extract_principal_components: 3  # Matrix operations understanding
+  test_calculate_explained_variance: 2   # Statistical interpretation
+  
+  # LOWER PRIORITY - Edge cases and robustness (7 points total)
+  test_edge_cases: 6              # Still important for robustness
+  test_transform_data: 1          # Direct matrix multiplication (now uses custom function)
+
+# Group-based scoring for reference (individual scores above take precedence)
+groups:
+  core_system:
+    patterns:
+      - "test_pca_complete"
+      - "test_against_sklearn"  
+    description: "Complete system validation - highest priority"
+    
+  advanced_usage:
+    patterns:
+      - "test_transform_new_data"
+      - "test_inverse_transform"
+    description: "Real-world PCA usage patterns"
+    
+  building_blocks:
+    patterns:
+      - "test_center_data"
+      - "test_compute_svd_decomposition"
+      - "test_extract_principal_components" 
+      - "test_calculate_explained_variance"
+      - "test_transform_data"
+    description: "Individual component understanding"
