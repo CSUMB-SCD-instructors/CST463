@@ -50,19 +50,17 @@ class TestRunner:
             config_path = self.assignment_dir / "scoring.yaml"
         
         if not config_path.exists():
-            if self.verbose and scoring_file:
-                print(f"Warning: Scoring file '{config_path}' not found. Using default scoring.")
+            if scoring_file:
+                log.warning(f"Scoring file '{config_path}' not found. Using default scoring.")
             return None
         
         try:
             with open(config_path, 'r') as f:
                 config = yaml.safe_load(f)
-            if self.verbose:
-                print(f"Loaded scoring configuration from: {config_path}")
+            log.info(f"Loaded scoring configuration from: {config_path}")
             return config
         except Exception as e:
-            if self.verbose:
-                print(f"Warning: Failed to load scoring config: {e}. Using default scoring.")
+            log.warning(f"Failed to load scoring config: {e}. Using default scoring.")
             return None
     
     def calculate_test_score(self, test_name, status):
@@ -104,8 +102,7 @@ class TestRunner:
         # Remove duplicates and sort
         test_files = sorted(list(set(test_files)))
         
-        if self.verbose:
-            print(f"Found test files: {[f.name for f in test_files]}")
+        log.info(f"Found test files: {[f.name for f in test_files]}")
             
         return test_files
     
@@ -155,22 +152,18 @@ class TestRunner:
                     (name.startswith('test_') or name.endswith('_test')))
             ]
             
-            if self.verbose:
-                print(f"\nRunning tests from {test_file.name}:")
-                print("=" * 50)
+            log.info(f"Running tests from {test_file.name}")
             
             for test_name, test_func in test_functions:
                 try:
                     test_func()
                     status = "PASSED"
                     error_message = None
-                    if self.verbose:
-                        print(f"✓ {test_name}")
+                    log.info(f"✓ {test_name}")
                 except Exception as e:
                     status = "FAILED"
                     error_message = str(e)
-                    if self.verbose:
-                        print(f"✗ {test_name}: {error_message}")
+                    log.error(f"✗ {test_name}: {error_message}")
                 
                 score = self.calculate_test_score(test_name, status)
                 results.append({
@@ -202,8 +195,7 @@ class TestRunner:
     
     def run_tests_in_file(self, test_file):
         """Run all tests in a specific file."""
-        if self.verbose:
-            print(f"\nProcessing: {test_file}")
+        log.info(f"Processing: {test_file}")
         
         # First try pytest if available
         pytest_result = self.try_pytest_runner(test_file)
@@ -246,7 +238,7 @@ class TestRunner:
         test_files = self.find_test_files()
         
         if not test_files:
-            print(f"No test files found in {self.assignment_dir}")
+            log.error(f"No test files found in {self.assignment_dir}")
             return
         
         all_results = []
@@ -283,14 +275,12 @@ class TestRunner:
             'test_results': self.results
         }
         
-        if self.verbose:
-            print("\n" + "=" * 50)
-            print(f"Test Summary for {self.assignment_dir.name}:")
-            print(f"Total tests: {total_tests}")
-            print(f"Passed: {passed_tests}")
-            print(f"Failed: {failed_tests}")
-            print(f"Success rate: {summary['test_summary']['success_rate']}%")
-            print(f"Score: {total_points_earned}/{total_points_possible} ({score_percentage}%)")
+        log.info(f"Test Summary for {self.assignment_dir.name}:")
+        log.info(f"Total tests: {total_tests}")
+        log.info(f"Passed: {passed_tests}")
+        log.info(f"Failed: {failed_tests}")
+        log.info(f"Success rate: {summary['test_summary']['success_rate']}%")
+        log.info(f"Score: {total_points_earned}/{total_points_possible} ({score_percentage}%)")
         
         return summary
     
@@ -304,8 +294,7 @@ class TestRunner:
         with open(filename, 'w') as f:
             yaml.dump(summary, f, default_flow_style=False, indent=2)
         
-        if self.verbose:
-            print(f"\nResults saved to: {filename}")
+        log.info(f"Results saved to: {filename}")
         
         return filename
 
@@ -378,8 +367,7 @@ def main():
         # Save to file
         with open(args.output, 'w') as f:
             yaml.dump(summary, f, default_flow_style=False, indent=2)
-        if verbose:
-            print(f"\nResults saved to: {args.output}")
+        log.info(f"Results saved to: {args.output}")
     else:
         # Output to stdout by default
         print(yaml.dump(summary, default_flow_style=False, indent=2))
