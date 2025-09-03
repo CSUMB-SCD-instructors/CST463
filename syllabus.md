@@ -138,12 +138,6 @@ In-class participation has three components:
 
 ### Extra Credit Potential
 
-#### Introductory Meeting (2%)
-
-During the first month of class, stop by my office and chat for a bit to get to know each other and you’ll get a small number of bonus points.
-You can either stop by my office during my regularly scheduled hours or schedule an appointment.
-See details in [the personnel section](#personnel) to find out how to schedule a meeting.
-
 #### Bug Hunting
 
 We all make mistakes – my github commit history is proof of that.
