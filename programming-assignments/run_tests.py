@@ -20,7 +20,6 @@ import traceback
 import yaml
 from pathlib import Path
 import inspect
-import subprocess
 import logging
 
 # Set up project logger
@@ -110,27 +109,52 @@ class TestRunner:
         """Try to run tests using pytest if available."""
         try:
             import pytest
-            
-            # Capture pytest output
-            result = subprocess.run([
-                sys.executable, '-m', 'pytest', str(test_file), '-v', '--tb=short'
-            ], cwd=self.assignment_dir, capture_output=True, text=True)
-            
-            return {
-                'runner': 'pytest',
-                'success': result.returncode == 0,
-                'stdout': result.stdout,
-                'stderr': result.stderr,
-                'return_code': result.returncode
-            }
         except ImportError:
             return None
-        except Exception as e:
+        
+        # Collect results using a custom pytest plugin
+        class TestCollector:
+            def __init__(self):
+                self.results = []
+            
+            def pytest_runtest_logreport(self, report):
+                if report.when == "call":
+                    self.results.append({
+                        'test_name': report.nodeid.split("::")[-1],
+                        'status': 'PASSED' if report.passed else 'FAILED',
+                        'error_message': str(report.longrepr) if report.failed else None
+                    })
+        
+        try:
+            old_cwd = os.getcwd()
+            os.chdir(self.assignment_dir)
+            
+            collector = TestCollector()
+            
+            # Run pytest programmatically with our custom plugin
+            result = pytest.main([
+                str(test_file), 
+                '-v', 
+                '--tb=short'
+            ], plugins=[collector])
+            
             return {
                 'runner': 'pytest',
+                'success': True,  # Always return success if we can run
+                'test_results': collector.results
+            }
+            
+        except Exception as e:
+            return {
+                'runner': 'pytest', 
                 'success': False,
                 'error': str(e)
             }
+        finally:
+            try:
+                os.chdir(old_cwd)
+            except (OSError, NameError):
+                pass
     
     def run_test_functions_directly(self, test_file):
         """Run test functions directly by importing and executing them."""
@@ -200,43 +224,32 @@ class TestRunner:
         # First try pytest if available
         pytest_result = self.try_pytest_runner(test_file)
         if pytest_result and pytest_result.get('success'):
-            # Parse pytest output for individual test results
-            return self.parse_pytest_output(pytest_result, test_file)
+            # Use the structured test results from pytest
+            return self.process_pytest_results(pytest_result, test_file)
         
         # Fall back to direct function execution
         return self.run_test_functions_directly(test_file)
     
-    def parse_pytest_output(self, pytest_result, test_file):
-        """Parse pytest output to extract individual test results."""
+    def process_pytest_results(self, pytest_result, test_file):
+        """Process structured pytest results."""
         results = []
         
-        stdout = pytest_result.get('stdout', '')
-        lines = stdout.split('\n')
+        test_results = pytest_result.get('test_results', [])
         
-        for line in lines:
-            line = line.strip()
-            if '::' in line and ('PASSED' in line or 'FAILED' in line):
-                # Extract test name from the part before the status
-                test_part = line.split()[0]  # e.g., "tests.py::test_matrix_multiply"
-                test_name = test_part.split('::')[-1]  # e.g., "test_matrix_multiply"
-                
-                # Determine status by checking if PASSED or FAILED is in the line
-                if 'PASSED' in line:
-                    status = 'PASSED'
-                elif 'FAILED' in line:
-                    status = 'FAILED'
-                else:
-                    continue  # Skip lines we can't parse
-                
-                score = self.calculate_test_score(test_name, status)
-                results.append({
-                    'test_name': test_name,
-                    'test_file': test_file.name,
-                    'status': status,
-                    'error_message': None if status == 'PASSED' else 'See pytest output',
-                    'points_earned': score,
-                    'points_possible': self.calculate_test_score(test_name, "PASSED")
-                })
+        for test_result in test_results:
+            test_name = test_result['test_name']
+            status = test_result['status']
+            error_message = test_result['error_message']
+            
+            score = self.calculate_test_score(test_name, status)
+            results.append({
+                'test_name': test_name,
+                'test_file': test_file.name,
+                'status': status,
+                'error_message': error_message,
+                'points_earned': score,
+                'points_possible': self.calculate_test_score(test_name, "PASSED")
+            })
         
         return results
     
@@ -266,7 +279,10 @@ class TestRunner:
         # Calculate scoring totals
         total_points_earned = sum(r.get('points_earned', 0) for r in self.results)
         total_points_possible = sum(r.get('points_possible', 0) for r in self.results)
-        score_percentage = round((total_points_earned / total_points_possible * 100) if total_points_possible > 0 else 0, 1)
+        if total_points_possible > 0:
+            score_percentage = round((total_points_earned / total_points_possible * 100), 1)
+        else:
+            score_percentage = 0
         
         summary = {
             'assignment_directory': str(self.assignment_dir),
