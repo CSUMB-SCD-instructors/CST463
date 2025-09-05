@@ -216,20 +216,27 @@ class TestRunner:
         for line in lines:
             line = line.strip()
             if '::' in line and ('PASSED' in line or 'FAILED' in line):
-                parts = line.split()
-                if len(parts) >= 2:
-                    test_name = parts[0].split('::')[-1]
-                    status = parts[-1]
-                    
-                    score = self.calculate_test_score(test_name, status)
-                    results.append({
-                        'test_name': test_name,
-                        'test_file': test_file.name,
-                        'status': status,
-                        'error_message': None if status == 'PASSED' else 'See pytest output',
-                        'points_earned': score,
-                        'points_possible': self.calculate_test_score(test_name, "PASSED")
-                    })
+                # Extract test name from the part before the status
+                test_part = line.split()[0]  # e.g., "tests.py::test_matrix_multiply"
+                test_name = test_part.split('::')[-1]  # e.g., "test_matrix_multiply"
+                
+                # Determine status by checking if PASSED or FAILED is in the line
+                if 'PASSED' in line:
+                    status = 'PASSED'
+                elif 'FAILED' in line:
+                    status = 'FAILED'
+                else:
+                    continue  # Skip lines we can't parse
+                
+                score = self.calculate_test_score(test_name, status)
+                results.append({
+                    'test_name': test_name,
+                    'test_file': test_file.name,
+                    'status': status,
+                    'error_message': None if status == 'PASSED' else 'See pytest output',
+                    'points_earned': score,
+                    'points_possible': self.calculate_test_score(test_name, "PASSED")
+                })
         
         return results
     
