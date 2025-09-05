@@ -21,6 +21,7 @@ import yaml
 from pathlib import Path
 import inspect
 import logging
+import signal
 
 # Set up project logger
 log = logging.getLogger('test_runner')
@@ -105,12 +106,16 @@ class TestRunner:
             
         return test_files
     
-    def try_pytest_runner(self, test_file):
-        """Try to run tests using pytest if available."""
+    def try_pytest_runner(self, test_file, timeout=60):
+        """Try to run tests using pytest if available with timeout protection."""
         try:
             import pytest
         except ImportError:
             return None
+        
+        # Timeout handler
+        def timeout_handler(signum, frame):
+            raise TimeoutError("Test execution timed out")
         
         # Collect results using a custom pytest plugin
         class TestCollector:
@@ -125,18 +130,29 @@ class TestRunner:
                         'error_message': str(report.longrepr) if report.failed else None
                     })
         
+        old_cwd = None
+        old_handler = None
         try:
             old_cwd = os.getcwd()
             os.chdir(self.assignment_dir)
             
             collector = TestCollector()
             
+            # Set up timeout protection (only on Unix-like systems)
+            if hasattr(signal, 'SIGALRM'):
+                old_handler = signal.signal(signal.SIGALRM, timeout_handler)
+                signal.alarm(timeout)
+            
             # Run pytest programmatically with our custom plugin
-            result = pytest.main([
+            pytest.main([
                 str(test_file), 
                 '-v', 
                 '--tb=short'
             ], plugins=[collector])
+            
+            # Cancel timeout if everything completed normally
+            if hasattr(signal, 'SIGALRM'):
+                signal.alarm(0)
             
             return {
                 'runner': 'pytest',
@@ -144,6 +160,13 @@ class TestRunner:
                 'test_results': collector.results
             }
             
+        except TimeoutError:
+            log.error(f"Test execution timed out after {timeout} seconds")
+            return {
+                'runner': 'pytest', 
+                'success': False,
+                'error': f'Test execution timed out after {timeout} seconds'
+            }
         except Exception as e:
             return {
                 'runner': 'pytest', 
@@ -151,14 +174,26 @@ class TestRunner:
                 'error': str(e)
             }
         finally:
-            try:
-                os.chdir(old_cwd)
-            except (OSError, NameError):
-                pass
+            # Clean up timeout and restore signal handler
+            if hasattr(signal, 'SIGALRM'):
+                signal.alarm(0)
+                if old_handler is not None:
+                    signal.signal(signal.SIGALRM, old_handler)
+            
+            # Restore working directory
+            if old_cwd is not None:
+                try:
+                    os.chdir(old_cwd)
+                except OSError:
+                    pass
     
-    def run_test_functions_directly(self, test_file):
-        """Run test functions directly by importing and executing them."""
+    def run_test_functions_directly(self, test_file, timeout=30):
+        """Run test functions directly by importing and executing them with timeout protection."""
         results = []
+        
+        # Timeout handler for individual tests
+        def timeout_handler(signum, frame):
+            raise TimeoutError("Individual test timed out")
         
         # Add the assignment directory to Python path
         sys.path.insert(0, str(self.assignment_dir))
@@ -179,15 +214,34 @@ class TestRunner:
             log.info(f"Running tests from {test_file.name}")
             
             for test_name, test_func in test_functions:
+                old_handler = None
                 try:
+                    # Set timeout for individual test (only on Unix-like systems)
+                    if hasattr(signal, 'SIGALRM'):
+                        old_handler = signal.signal(signal.SIGALRM, timeout_handler)
+                        signal.alarm(timeout)
+                    
                     test_func()
                     status = "PASSED"
                     error_message = None
                     log.info(f"✓ {test_name}")
+                    
+                except TimeoutError:
+                    status = "FAILED" 
+                    error_message = f"Test timed out after {timeout} seconds"
+                    log.error(f"✗ {test_name}: {error_message}")
+                    
                 except Exception as e:
                     status = "FAILED"
                     error_message = str(e)
                     log.error(f"✗ {test_name}: {error_message}")
+                
+                finally:
+                    # Clean up timeout
+                    if hasattr(signal, 'SIGALRM'):
+                        signal.alarm(0)
+                        if old_handler is not None:
+                            signal.signal(signal.SIGALRM, old_handler)
                 
                 score = self.calculate_test_score(test_name, status)
                 results.append({
