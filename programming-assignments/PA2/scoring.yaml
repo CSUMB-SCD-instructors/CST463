@@ -1,0 +1,133 @@
+# PA2 Scoring Configuration
+# Total: 100 points for technical implementation (Part 1)
+# Part 2 (visualization/analysis) graded separately
+
+functions:
+  # Core mathematical foundations (40 points total)
+  numerical_derivative:
+    weight: 20
+    description: "Numerical partial derivative computation"
+    test_categories:
+      single_variable: 8      # Single variable functions
+      multivariable: 8        # Partial derivatives
+      accuracy: 4             # Numerical precision
+
+  numerical_gradient:
+    weight: 15
+    description: "Full gradient vector computation"
+    test_categories:
+      correctness: 10         # Proper gradient calculation
+      integration: 3          # Uses numerical_derivative correctly
+      vector_output: 2        # Proper array formatting
+
+  mse_gradient:
+    weight: 5
+    description: "Analytical MSE gradient"
+    test_categories:
+      correctness: 4          # Mathematical accuracy
+      efficiency: 1           # Direct computation vs numerical
+
+  # Prediction and cost functions (15 points total)
+  linear_predict:
+    weight: 8
+    description: "Linear model predictions"
+    test_categories:
+      correctness: 6          # Matrix multiplication accuracy
+      edge_cases: 2           # Handle various input shapes
+
+  mse_cost:
+    weight: 7
+    description: "Mean squared error calculation"
+    test_categories:
+      correctness: 5          # Proper MSE formula
+      edge_cases: 2           # Perfect predictions, etc.
+
+  # Optimization building blocks (25 points total)
+  gradient_descent_step:
+    weight: 15
+    description: "Single gradient descent update"
+    test_categories:
+      weight_update: 10       # Correct parameter update
+      cost_calculation: 3     # Returns current cost
+      integration: 2          # Uses helper functions properly
+
+  initialize_weights:
+    weight: 5
+    description: "Weight initialization methods"
+    test_categories:
+      methods: 3              # All initialization methods work
+      shapes: 2               # Correct output dimensions
+
+  has_converged:
+    weight: 5
+    description: "Convergence detection"
+    test_categories:
+      logic: 4                # Proper convergence logic
+      edge_cases: 1           # Empty history, insufficient data
+
+  # Data utilities (10 points total)
+  add_intercept:
+    weight: 5
+    description: "Add bias column to feature matrix"
+    test_categories:
+      correctness: 4          # Proper column addition
+      shapes: 1               # Handle various input shapes
+
+  generate_synthetic_data:
+    weight: 5
+    description: "Synthetic dataset generation"
+    test_categories:
+      shapes: 2               # Correct output dimensions
+      reproducibility: 2      # Seeded randomness works
+      noise_control: 1        # Noise parameter effects
+
+  # Integration function (10 points total)
+  gradient_descent:
+    weight: 10
+    description: "Complete gradient descent training"
+    test_categories:
+      convergence: 6          # Actually minimizes cost
+      integration: 3          # Uses all helper functions
+      output_format: 1        # Returns weights and cost history
+
+# Grading breakdown
+grading:
+  total_points: 100
+  categories:
+    foundational: 40        # numerical derivatives and gradients
+    optimization_core: 25   # gradient descent mechanics
+    supporting: 25          # prediction, cost, data functions
+    integration: 10         # full training pipeline
+  
+  # Minimum thresholds
+  pass_threshold: 70
+  partial_credit: true
+  
+  # Special considerations
+  numerical_stability:
+    description: "Bonus for handling numerical edge cases"
+    max_bonus: 5
+  
+  mathematical_insight:
+    description: "Bonus for demonstrating understanding in comments"
+    max_bonus: 3
+
+# Test execution
+testing:
+  framework: pytest
+  timeout: 300  # 5 minutes max
+  test_file: "test.py"
+  
+  # Test categories with weights
+  test_weights:
+    basic_functionality: 0.6    # Core correctness
+    edge_cases: 0.2            # Robustness
+    integration: 0.2           # Working together
+
+# Assignment-specific notes
+notes:
+  - "Foundational functions (derivatives/gradients) weighted most heavily"
+  - "Single gradient step more valuable than full training loop"
+  - "Mathematical correctness prioritized over performance"
+  - "Integration tests verify components work together"
+  - "Partial credit available for partially working implementations"
