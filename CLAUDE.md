@@ -82,6 +82,31 @@ git fetch template
 git cherry-pick <improvement-commits>
 ```
 
+## Programming Assignment Pedagogical Approach
+
+Programming assignments follow a consistent two-part structure designed to reinforce both technical implementation and analytical thinking:
+
+### Part 1: Technical Implementation
+- **Core Concept Implementation**: Students implement fundamental algorithms/concepts from scratch (e.g., custom matrix multiplication, PCA pipeline)
+- **Hands-on Learning**: Building implementations by hand deepens understanding of underlying mathematics and concepts
+- **Scaffolding Philosophy**: Early assignments may include hints and detailed docstrings, but hints should be progressively removed in later assignments to increase difficulty
+- **Testing Integration**: Implementations are validated against comprehensive test suites
+
+### Part 2: Visualization & Analysis  
+- **Applied Analysis**: Students use their implementations on real datasets via Jupyter notebooks
+- **Comparative Thinking**: Compare naive/intuitive approaches against principled methods (e.g., manual feature selection vs. PCA)
+- **Visual Communication**: Create clear matplotlib visualizations with proper labeling and interpretation
+- **Critical Reflection**: Written analysis requiring students to articulate insights, limitations, and trade-offs
+- **Peer Review Preparation**: Executive summaries and specific questions to develop communication skills
+
+### Design Principles
+- **Coherent Integration**: Both parts use the same custom implementation, reinforcing the connection between theory and practice  
+- **Progressive Difficulty**: Reduce hints and increase independence across assignments throughout the semester
+- **Real-World Application**: Use authentic datasets that generate meaningful insights
+- **Communication Skills**: Emphasize clear explanation of technical concepts for peer audiences
+
+This approach ensures students both understand the mathematical foundations and can apply them effectively to real problems.
+
 ## Important Notes
 
 - No package.json, Makefile, or traditional build system - this is a content management template
