@@ -362,7 +362,7 @@ def has_converged(cost_history: List[float], tolerance: float = 1e-6) -> bool:
 
 if __name__ == "__main__":
     print("PA2: Gradient Descent & Linear Regression")
-    print("Run 'pytest test.py -v' to test your implementations")
+    print("Run 'pytest tests.py -v' to test your implementations")
     
     # Quick demo when students have implemented functions
     print("\n=== Quick Demo (implement functions first!) ===")

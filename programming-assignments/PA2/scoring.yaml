@@ -116,7 +116,7 @@ grading:
 testing:
   framework: pytest
   timeout: 300  # 5 minutes max
-  test_file: "test.py"
+  test_file: "tests.py"
   
   # Test categories with weights
   test_weights:
