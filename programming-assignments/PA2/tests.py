@@ -109,7 +109,7 @@ class TestPredictionAndCost:
         weights = np.array([1.0, 0.5, 1.0])  # [bias, w1, w2]
         
         predictions = linear_predict(X, weights)
-        expected = np.array([6.0, 10.0, 14.0])  # [1 + 2*0.5 + 3*1, etc.]
+        expected = np.array([5.0, 8.0, 11.0])  # [1*1 + 2*0.5 + 3*1, etc.]
         
         np.testing.assert_allclose(predictions, expected)
     
