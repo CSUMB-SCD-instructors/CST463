@@ -14,7 +14,7 @@ class GradientDescentDemo:
         # Generate sample data with non-zero intercept and higher variation
         np.random.seed(42)
         self.x_data = np.linspace(0, 10, num_samples)
-        self.y_data = 2.5 * self.x_data + 3.5 + np.random.normal(0, 1.8, num_samples)
+        self.y_data = 2.5 * self.x_data + 3.5 + np.random.normal(0, 5, num_samples)
         
         # Calculate optimal line using closed form solution
         # ALWAYS calculate the true best fit (with intercept) to show its importance
@@ -55,7 +55,8 @@ class GradientDescentDemo:
         return np.mean((predictions - self.y_data) ** 2)
     
     def compute_gradients(self, slope, intercept):
-        # Stochastic gradient descent: use batch_size samples
+        # Stochastic gradient descent: use batch_size samples for GRADIENT computation only
+        # Note: Loss surface visualization always uses full dataset for consistency
         if self.batch_size is None or self.batch_size >= len(self.x_data):
             # Full batch gradient descent
             x_batch = self.x_data
@@ -80,21 +81,38 @@ class GradientDescentDemo:
     
     def _compute_loss_surface(self):
         """Pre-compute the 3D loss surface for visualization"""
-        # Create meshgrid for parameter space
-        slope_vals = np.linspace(self.slope_range[0], self.slope_range[1], 50)
-        intercept_vals = np.linspace(self.intercept_range[0], self.intercept_range[1], 50)
-        self.slope_mesh, self.intercept_mesh = np.meshgrid(slope_vals, intercept_vals)
-        
-        # Compute loss for each point in parameter space
-        self.loss_surface = np.zeros_like(self.slope_mesh)
-        for i in range(self.slope_mesh.shape[0]):
-            for j in range(self.slope_mesh.shape[1]):
-                slope = self.slope_mesh[i, j]
-                intercept = self.intercept_mesh[i, j]
-                self.loss_surface[i, j] = self.compute_error(slope, intercept)
+        if self.train_intercept:
+            # Create meshgrid for parameter space (slope and intercept)
+            slope_vals = np.linspace(self.slope_range[0], self.slope_range[1], 50)
+            intercept_vals = np.linspace(self.intercept_range[0], self.intercept_range[1], 50)
+            self.slope_mesh, self.intercept_mesh = np.meshgrid(slope_vals, intercept_vals)
+            
+            # Compute loss for each point in parameter space using FULL dataset
+            self.loss_surface = np.zeros_like(self.slope_mesh)
+            for i in range(self.slope_mesh.shape[0]):
+                for j in range(self.slope_mesh.shape[1]):
+                    slope = self.slope_mesh[i, j]
+                    intercept = self.intercept_mesh[i, j]
+                    # Use _compute_loss_at_point which always uses full dataset
+                    self.loss_surface[i, j] = self._compute_loss_at_point(slope, intercept)
+        else:
+            # For no-intercept case, create 1D loss curve for slope only
+            # Still create 2D arrays for compatibility, but intercept fixed at 0
+            slope_vals = np.linspace(self.slope_range[0], self.slope_range[1], 50)
+            intercept_vals = np.array([0])  # Fixed at 0
+            self.slope_mesh, self.intercept_mesh = np.meshgrid(slope_vals, intercept_vals)
+            
+            # Compute loss for each slope value with intercept=0
+            self.loss_surface = np.zeros_like(self.slope_mesh)
+            for i in range(self.slope_mesh.shape[0]):
+                for j in range(self.slope_mesh.shape[1]):
+                    slope = self.slope_mesh[i, j]
+                    # Always use intercept=0 for no-intercept case
+                    self.loss_surface[i, j] = self._compute_loss_at_point(slope, 0)
     
     def _compute_loss_at_point(self, slope, intercept):
-        """Compute loss at a specific parameter point"""
+        """Compute loss at a specific parameter point using FULL dataset"""
+        # Always use full dataset for loss computation, regardless of batch_size
         if self.train_intercept:
             predictions = slope * self.x_data + intercept
         else:
@@ -105,6 +123,8 @@ class GradientDescentDemo:
         """Print demo header with starting information"""
         batch_desc = f"batch size {self.batch_size}" if self.batch_size else "full batch"
         print(f"=== Gradient Descent Demo ({batch_desc}) ===")
+        if self.batch_size:
+            print("Note: Loss surface shows true loss on full dataset, gradients computed on mini-batches")
         if self.train_intercept:
             print(f"Starting: slope={self.slope:.3f}, intercept={self.intercept:.3f}")
             print(f"Target optimal: slope={self.optimal_params[1]:.3f}, intercept={self.optimal_params[0]:.3f}")
@@ -205,13 +225,13 @@ class GradientDescentDemo:
         # Bottom-right plot: 3D Loss Surface
         ax = plt.subplot(2, 2, 4, projection='3d')
         
-        if self.train_intercept and len(self.slopes_history) > 1:
-            # Plot the loss surface
-            surf = ax.plot_surface(self.slope_mesh, self.intercept_mesh, self.loss_surface, 
-                                 cmap='coolwarm', alpha=0.6, linewidth=0, antialiased=True)
-            
-            # Plot the parameter path
-            if len(self.slopes_history) > 1:
+        if len(self.slopes_history) > 1:
+            if self.train_intercept:
+                # Plot the 3D loss surface for intercept case
+                surf = ax.plot_surface(self.slope_mesh, self.intercept_mesh, self.loss_surface, 
+                                     cmap='coolwarm', alpha=0.6, linewidth=0, antialiased=True)
+                
+                # Plot the parameter path
                 path_losses = [self._compute_loss_at_point(s, i) for s, i in 
                              zip(self.slopes_history, self.intercepts_history)]
                 ax.plot(self.slopes_history, self.intercepts_history, path_losses, 
@@ -226,34 +246,62 @@ class GradientDescentDemo:
                 optimal_loss = self._compute_loss_at_point(self.optimal_params[1], self.optimal_params[0])
                 ax.scatter([self.optimal_params[1]], [self.optimal_params[0]], [optimal_loss], 
                          color='orange', s=100, marker='^', zorder=5)
-            
-            ax.set_xlabel('Slope')
-            ax.set_ylabel('Intercept')
-            ax.set_zlabel('Loss')
-            ax.set_title('3D Loss Surface')
-            ax.view_init(elev=30, azim=45)
-        else:
-            # For no-intercept case, show 2D loss curve
-            if len(self.slopes_history) > 1:
-                slope_vals = np.linspace(self.slope_range[0], self.slope_range[1], 100)
-                loss_vals = [self._compute_loss_at_point(s, 0) for s in slope_vals]
-                ax.plot(slope_vals, loss_vals, 'b-', linewidth=2, label='Loss curve')
                 
-                # Plot parameter path
+                ax.set_xlabel('Slope')
+                ax.set_ylabel('Intercept')
+                ax.set_zlabel('Loss')
+                ax.set_title('3D Loss Surface')
+                ax.view_init(elev=30, azim=45)
+            else:
+                # For no-intercept case, show 3D surface with intercept=0 plane
+                # This shows the true loss landscape when constrained to go through origin
+                slope_vals = np.linspace(self.slope_range[0], self.slope_range[1], 100)
+                intercept_vals = np.linspace(self.intercept_range[0], self.intercept_range[1], 50)
+                slope_mesh_full, intercept_mesh_full = np.meshgrid(slope_vals, intercept_vals)
+                
+                # Compute full loss surface (including where intercept != 0)
+                loss_surface_full = np.zeros_like(slope_mesh_full)
+                for i in range(slope_mesh_full.shape[0]):
+                    for j in range(slope_mesh_full.shape[1]):
+                        loss_surface_full[i, j] = self._compute_loss_at_point(
+                            slope_mesh_full[i, j], intercept_mesh_full[i, j])
+                
+                # Plot the full 3D surface
+                surf = ax.plot_surface(slope_mesh_full, intercept_mesh_full, loss_surface_full, 
+                                     cmap='coolwarm', alpha=0.3, linewidth=0, antialiased=True)
+                
+                # Highlight the constraint plane (intercept=0)
+                constraint_slopes = np.linspace(self.slope_range[0], self.slope_range[1], 100)
+                constraint_intercepts = np.zeros_like(constraint_slopes)
+                constraint_losses = [self._compute_loss_at_point(s, 0) for s in constraint_slopes]
+                ax.plot(constraint_slopes, constraint_intercepts, constraint_losses, 
+                       'b-', linewidth=3, alpha=0.8, label='Constraint: intercept=0')
+                
+                # Plot parameter path (constrained to intercept=0)
                 path_losses = [self._compute_loss_at_point(s, 0) for s in self.slopes_history]
-                ax.plot(self.slopes_history, path_losses, 'ro-', linewidth=2, markersize=4, alpha=0.8, label='Gradient path')
+                ax.plot(self.slopes_history, [0]*len(self.slopes_history), path_losses, 
+                       'ro-', linewidth=2, markersize=4, alpha=0.8, label='Gradient path')
                 
                 # Current position
                 current_loss = self._compute_loss_at_point(self.slope, 0)
-                ax.scatter([self.slope], [current_loss], color='red', s=100, marker='*', zorder=5)
+                ax.scatter([self.slope], [0], [current_loss], 
+                         color='red', s=100, marker='*', zorder=5)
                 
-                # Optimal position
+                # Mark optimal point on constraint
                 optimal_loss = self._compute_loss_at_point(self.optimal_params[1], 0)
-                ax.scatter([self.optimal_params[1]], [optimal_loss], color='orange', s=100, marker='^', zorder=5)
+                ax.scatter([self.optimal_params[1]], [0], [optimal_loss], 
+                         color='orange', s=100, marker='^', zorder=5)
+                
+                # Mark true optimal (with intercept) to show what we're missing
+                true_optimal_loss = self._compute_loss_at_point(self.true_optimal_params[1], self.true_optimal_params[0])
+                ax.scatter([self.true_optimal_params[1]], [self.true_optimal_params[0]], [true_optimal_loss], 
+                         color='purple', s=100, marker='s', zorder=5, label='True optimal')
                 
                 ax.set_xlabel('Slope')
-                ax.set_ylabel('Loss')
-                ax.set_title('Loss vs Slope')
+                ax.set_ylabel('Intercept')
+                ax.set_zlabel('Loss')
+                ax.set_title('Loss Surface with Constraint')
+                ax.view_init(elev=30, azim=45)
                 ax.legend()
         
         plt.tight_layout()
@@ -296,7 +344,8 @@ class GradientDescentDemo:
             # Store current state
             self.slopes_history.append(self.slope)
             self.intercepts_history.append(self.intercept)
-            current_error = self.compute_error(self.slope, self.intercept)
+            # Always compute error on full dataset for visualization consistency
+            current_error = self._compute_loss_at_point(self.slope, self.intercept)
             self.errors_history.append(current_error)
             
             # Create visualization
@@ -328,7 +377,8 @@ class GradientDescentDemo:
             # Store current state
             self.slopes_history.append(self.slope)
             self.intercepts_history.append(self.intercept)
-            current_error = self.compute_error(self.slope, self.intercept)
+            # Always compute error on full dataset for visualization consistency
+            current_error = self._compute_loss_at_point(self.slope, self.intercept)
             self.errors_history.append(current_error)
             
             # Create visualization
