@@ -35,6 +35,10 @@ class GradientDescentDemo:
         self.intercepts_history = []
         self.errors_history = []
         
+        # Pre-calculate parameter space bounds for consistent plotting
+        self.slope_range = (-1.0, 6.0)  # Expected range for slope exploration
+        self.intercept_range = (-5.0, 10.0)  # Expected range for intercept exploration
+        
     def compute_predictions(self, slope, intercept):
         if self.train_intercept:
             return slope * self.x_data + intercept
@@ -125,7 +129,7 @@ class GradientDescentDemo:
             plt.title('Error Reduction Over Time')
             plt.grid(True, alpha=0.3)
             
-            # Right plot: Parameter space exploration
+            # Right plot: Parameter space exploration (with fixed dimensions)
             plt.subplot(1, 3, 3)
             if len(self.slopes_history) > 1:
                 if self.train_intercept:
@@ -135,6 +139,8 @@ class GradientDescentDemo:
                               marker='*', zorder=5, label='Current')
                     plt.scatter([self.optimal_params[1]], [self.optimal_params[0]], 
                               color='orange', s=100, marker='^', zorder=5, label='Target')
+                    plt.xlim(self.slope_range)
+                    plt.ylim(self.intercept_range)
                     plt.xlabel('Slope')
                     plt.ylabel('Intercept')
                     plt.title('Parameter Space Exploration')
@@ -147,6 +153,8 @@ class GradientDescentDemo:
                               marker='^', zorder=5, label='Target (no intercept)')
                     plt.scatter([self.true_optimal_params[1]], [self.true_optimal_params[0]], 
                               color='purple', s=100, marker='s', zorder=5, label='True optimal')
+                    plt.xlim(self.slope_range)
+                    plt.ylim(-1, 10)
                     plt.xlabel('Slope')
                     plt.ylabel('Intercept (fixed at 0)')
                     plt.title('Parameter Space (Slope Only)')
@@ -202,18 +210,26 @@ def run_demo():
         demo = GradientDescentDemo(learning_rate=0.05, num_iterations=50, train_intercept=train_intercept)
         demo.step_by_step_demo()
     else:
-        demo = GradientDescentDemo(learning_rate=0.1, num_iterations=100, train_intercept=train_intercept)
+        demo = GradientDescentDemo(learning_rate=0.05, num_iterations=50, train_intercept=train_intercept)
         
         print("Running automatic demo with 0.25 second delays...")
+        if demo.train_intercept:
+            print(f"Starting: slope={demo.slope:.3f}, intercept={demo.intercept:.3f}")
+            print(f"Target optimal: slope={demo.optimal_params[1]:.3f}, intercept={demo.optimal_params[0]:.3f}")
+        else:
+            print(f"Starting: slope={demo.slope:.3f} (no intercept - forced through origin)")
+            print(f"Target optimal (no intercept): slope={demo.optimal_params[1]:.3f}")
+            print(f"True optimal (with intercept): slope={demo.true_optimal_params[1]:.3f}, intercept={demo.true_optimal_params[0]:.3f}")
         
-        # Run gradient descent with visualization
+        # Use the SAME logic as step-by-step mode to ensure consistency
         plt.figure(figsize=(20, 5))
         
         for i in range(demo.num_iterations):
+            # Store current state
             demo.slopes_history.append(demo.slope)
             demo.intercepts_history.append(demo.intercept)
-            error = demo.compute_error(demo.slope, demo.intercept)
-            demo.errors_history.append(error)
+            current_error = demo.compute_error(demo.slope, demo.intercept)
+            demo.errors_history.append(current_error)
             
             # Update visualization every step
             plt.clf()
@@ -262,14 +278,15 @@ def run_demo():
             
             # Error plot
             plt.subplot(1, 3, 2)
-            plt.plot(range(len(demo.errors_history)), demo.errors_history, 'b-', linewidth=2)
-            plt.scatter([i], [error], color='red', s=50, zorder=5)
+            if len(demo.errors_history) > 1:
+                plt.plot(range(len(demo.errors_history)), demo.errors_history, 'b-', linewidth=2)
+                plt.scatter([i], [current_error], color='red', s=50, zorder=5)
             plt.xlabel('Iteration')
             plt.ylabel('Mean Squared Error')
-            plt.title('Error Reduction')
+            plt.title('Error Reduction Over Time')
             plt.grid(True, alpha=0.3)
             
-            # Parameter space
+            # Parameter space (with fixed dimensions)
             plt.subplot(1, 3, 3)
             if demo.train_intercept:
                 plt.scatter(demo.slopes_history, demo.intercepts_history, 
@@ -277,6 +294,8 @@ def run_demo():
                 plt.scatter([demo.slope], [demo.intercept], color='red', s=100, marker='*', zorder=5)
                 plt.scatter([demo.optimal_params[1]], [demo.optimal_params[0]], 
                           color='orange', s=100, marker='^', zorder=5)
+                plt.xlim(demo.slope_range)
+                plt.ylim(demo.intercept_range)
                 plt.xlabel('Slope')
                 plt.ylabel('Intercept')
                 plt.title('Parameter Space')
@@ -287,6 +306,8 @@ def run_demo():
                 plt.scatter([demo.optimal_params[1]], [0], color='orange', s=100, marker='^', zorder=5)
                 plt.scatter([demo.true_optimal_params[1]], [demo.true_optimal_params[0]], 
                           color='purple', s=100, marker='s', zorder=5)
+                plt.xlim(demo.slope_range)
+                plt.ylim(-1, 10)
                 plt.xlabel('Slope')
                 plt.ylabel('Intercept')
                 plt.title('Parameter Space')
@@ -296,13 +317,29 @@ def run_demo():
             plt.draw()
             plt.pause(0.25)
             
+            # Print current state
+            if demo.train_intercept:
+                print(f"Step {i}: slope={demo.slope:.4f}, intercept={demo.intercept:.4f}, error={current_error:.4f}")
+            else:
+                print(f"Step {i}: slope={demo.slope:.4f}, error={current_error:.4f}")
+            
             if i < demo.num_iterations - 1:
+                # THE SIMPLE GRADIENT DESCENT LOOP! (Same as manual mode)
                 slope_grad, intercept_grad = demo.compute_gradients(demo.slope, demo.intercept)
                 demo.slope = demo.slope - demo.learning_rate * slope_grad
                 if demo.train_intercept:
                     demo.intercept = demo.intercept - demo.learning_rate * intercept_grad
         
         plt.show()
+        print("\nDemo complete!")
+        if demo.train_intercept:
+            print(f"Final: slope={demo.slope:.3f}, intercept={demo.intercept:.3f}")
+            print(f"Target: slope={demo.optimal_params[1]:.3f}, intercept={demo.optimal_params[0]:.3f}")
+        else:
+            print(f"Final: slope={demo.slope:.3f} (no intercept)")
+            print(f"Target (no intercept): slope={demo.optimal_params[1]:.3f}")
+            print(f"True optimal (with intercept): slope={demo.true_optimal_params[1]:.3f}, intercept={demo.true_optimal_params[0]:.3f}")
+            print(f"Notice how much better the true optimal line fits the data!")
         return
 
 if __name__ == "__main__":
