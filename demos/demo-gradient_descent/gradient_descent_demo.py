@@ -207,12 +207,12 @@ def run_demo():
     train_intercept = intercept_choice != "2"
     
     if choice == "1":
-        demo = GradientDescentDemo(learning_rate=0.05, num_iterations=50, train_intercept=train_intercept)
+        demo = GradientDescentDemo(learning_rate=0.05, num_iterations=200, train_intercept=train_intercept)
         demo.step_by_step_demo()
     else:
-        demo = GradientDescentDemo(learning_rate=0.05, num_iterations=50, train_intercept=train_intercept)
+        demo = GradientDescentDemo(learning_rate=0.05, num_iterations=200, train_intercept=train_intercept)
         
-        print("Running automatic demo with 0.25 second delays...")
+        print("Running automatic demo with 0.05 second delays...")
         if demo.train_intercept:
             print(f"Starting: slope={demo.slope:.3f}, intercept={demo.intercept:.3f}")
             print(f"Target optimal: slope={demo.optimal_params[1]:.3f}, intercept={demo.optimal_params[0]:.3f}")
@@ -315,7 +315,7 @@ def run_demo():
             
             plt.tight_layout()
             plt.draw()
-            plt.pause(0.25)
+            plt.pause(0.05)
             
             # Print current state
             if demo.train_intercept:
