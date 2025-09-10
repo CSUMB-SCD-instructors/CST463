@@ -4,22 +4,28 @@ from matplotlib.animation import FuncAnimation
 import time
 
 class GradientDescentDemo:
-    def __init__(self, learning_rate=0.01, num_iterations=100):
+    def __init__(self, learning_rate=0.01, num_iterations=100, train_intercept=True):
         self.learning_rate = learning_rate
         self.num_iterations = num_iterations
+        self.train_intercept = train_intercept
         
-        # Generate sample data
+        # Generate sample data with non-zero intercept
         np.random.seed(42)
         self.x_data = np.linspace(0, 10, 20)
-        self.y_data = 2.5 * self.x_data + 1.0 + np.random.normal(0, 1, 20)
+        self.y_data = 2.5 * self.x_data + 3.5 + np.random.normal(0, 1, 20)
         
         # Calculate optimal line using closed form solution
-        X = np.column_stack([np.ones(len(self.x_data)), self.x_data])
-        self.optimal_params = np.linalg.solve(X.T @ X, X.T @ self.y_data)
+        if train_intercept:
+            X = np.column_stack([np.ones(len(self.x_data)), self.x_data])
+            self.optimal_params = np.linalg.solve(X.T @ X, X.T @ self.y_data)
+        else:
+            # Force through origin - no intercept
+            X = self.x_data.reshape(-1, 1)
+            self.optimal_params = [0, np.linalg.solve(X.T @ X, X.T @ self.y_data)[0]]
         
         # Initialize parameters (start far from optimal)
         self.slope = 0.0
-        self.intercept = 0.0
+        self.intercept = 0.0 if train_intercept else 0.0
         
         # Storage for visualization
         self.slopes_history = []
@@ -27,7 +33,10 @@ class GradientDescentDemo:
         self.errors_history = []
         
     def compute_predictions(self, slope, intercept):
-        return slope * self.x_data + intercept
+        if self.train_intercept:
+            return slope * self.x_data + intercept
+        else:
+            return slope * self.x_data
     
     def compute_error(self, slope, intercept):
         predictions = self.compute_predictions(slope, intercept)
@@ -38,15 +47,19 @@ class GradientDescentDemo:
         errors = predictions - self.y_data
         
         slope_gradient = np.mean(errors * self.x_data)
-        intercept_gradient = np.mean(errors)
+        intercept_gradient = np.mean(errors) if self.train_intercept else 0
         
         return slope_gradient, intercept_gradient
     
     def step_by_step_demo(self):
         """Interactive step-by-step demonstration"""
         print("=== Gradient Descent Step-by-Step Demo ===")
-        print(f"Starting: slope={self.slope:.3f}, intercept={self.intercept:.3f}")
-        print(f"Target optimal: slope={self.optimal_params[1]:.3f}, intercept={self.optimal_params[0]:.3f}")
+        if self.train_intercept:
+            print(f"Starting: slope={self.slope:.3f}, intercept={self.intercept:.3f}")
+            print(f"Target optimal: slope={self.optimal_params[1]:.3f}, intercept={self.optimal_params[0]:.3f}")
+        else:
+            print(f"Starting: slope={self.slope:.3f} (no intercept - forced through origin)")
+            print(f"Target optimal: slope={self.optimal_params[1]:.3f} (no intercept)")
         print("\nPress Enter to see each step...")
         
         plt.figure(figsize=(15, 5))
@@ -75,9 +88,13 @@ class GradientDescentDemo:
             y_current = self.slope * self.x_data + self.intercept
             plt.plot(self.x_data, y_current, 'red', linewidth=3, label=f'Current fit (step {i})')
             
-            # Target optimal line
-            y_optimal = self.optimal_params[1] * self.x_data + self.optimal_params[0]
-            plt.plot(self.x_data, y_optimal, 'green', linestyle='--', linewidth=2, label='Optimal fit')
+            # Target optimal line (colorblind-friendly: orange with triangles)
+            if self.train_intercept:
+                y_optimal = self.optimal_params[1] * self.x_data + self.optimal_params[0]
+            else:
+                y_optimal = self.optimal_params[1] * self.x_data
+            plt.plot(self.x_data, y_optimal, color='orange', linestyle='--', linewidth=2, 
+                    marker='^', markersize=4, markevery=3, label='Optimal fit')
             
             plt.xlabel('X')
             plt.ylabel('Y')
@@ -100,7 +117,10 @@ class GradientDescentDemo:
             plt.pause(0.1)
             
             # Print current state
-            print(f"Step {i}: slope={self.slope:.4f}, intercept={self.intercept:.4f}, error={current_error:.4f}")
+            if self.train_intercept:
+                print(f"Step {i}: slope={self.slope:.4f}, intercept={self.intercept:.4f}, error={current_error:.4f}")
+            else:
+                print(f"Step {i}: slope={self.slope:.4f}, error={current_error:.4f}")
             
             if i < self.num_iterations - 1:
                 input("Press Enter for next step...")
@@ -108,12 +128,17 @@ class GradientDescentDemo:
                 # THE SIMPLE GRADIENT DESCENT LOOP!
                 slope_grad, intercept_grad = self.compute_gradients(self.slope, self.intercept)
                 self.slope = self.slope - self.learning_rate * slope_grad
-                self.intercept = self.intercept - self.learning_rate * intercept_grad
+                if self.train_intercept:
+                    self.intercept = self.intercept - self.learning_rate * intercept_grad
         
         plt.show()
         print("\nDemo complete!")
-        print(f"Final: slope={self.slope:.3f}, intercept={self.intercept:.3f}")
-        print(f"Target: slope={self.optimal_params[1]:.3f}, intercept={self.optimal_params[0]:.3f}")
+        if self.train_intercept:
+            print(f"Final: slope={self.slope:.3f}, intercept={self.intercept:.3f}")
+            print(f"Target: slope={self.optimal_params[1]:.3f}, intercept={self.optimal_params[0]:.3f}")
+        else:
+            print(f"Final: slope={self.slope:.3f} (no intercept)")
+            print(f"Target: slope={self.optimal_params[1]:.3f} (no intercept)")
 
 def run_demo():
     """Run the interactive demo"""
@@ -123,11 +148,18 @@ def run_demo():
     
     choice = input("Enter choice (1 or 2): ").strip()
     
+    print("\nTrain intercept/bias?")
+    print("1. Yes - train both slope and intercept (full linear regression)")
+    print("2. No - only train slope, force line through origin")
+    
+    intercept_choice = input("Enter choice (1 or 2): ").strip()
+    train_intercept = intercept_choice != "2"
+    
     if choice == "1":
-        demo = GradientDescentDemo(learning_rate=0.05, num_iterations=50)
+        demo = GradientDescentDemo(learning_rate=0.05, num_iterations=50, train_intercept=train_intercept)
         demo.step_by_step_demo()
     else:
-        demo = GradientDescentDemo(learning_rate=0.1, num_iterations=100)
+        demo = GradientDescentDemo(learning_rate=0.1, num_iterations=100, train_intercept=train_intercept)
         
         # Run gradient descent
         for i in range(demo.num_iterations):
@@ -158,9 +190,13 @@ def run_demo():
         y_final = demo.slope * demo.x_data + demo.intercept
         plt.plot(demo.x_data, y_final, 'red', linewidth=3, label='Final fit')
         
-        # Optimal line
-        y_optimal = demo.optimal_params[1] * demo.x_data + demo.optimal_params[0]
-        plt.plot(demo.x_data, y_optimal, 'green', linestyle='--', linewidth=2, label='Optimal fit')
+        # Optimal line (colorblind-friendly)
+        if demo.train_intercept:
+            y_optimal = demo.optimal_params[1] * demo.x_data + demo.optimal_params[0]
+        else:
+            y_optimal = demo.optimal_params[1] * demo.x_data
+        plt.plot(demo.x_data, y_optimal, color='orange', linestyle='--', linewidth=2, 
+                marker='^', markersize=4, markevery=3, label='Optimal fit')
         
         plt.xlabel('X')
         plt.ylabel('Y')
