@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+from mpl_toolkits.mplot3d import Axes3D
 import time
 
 class GradientDescentDemo:
@@ -40,6 +41,9 @@ class GradientDescentDemo:
         self.slope_range = (-1.0, 6.0)  # Expected range for slope exploration
         self.intercept_range = (-5.0, 10.0)  # Expected range for intercept exploration
         
+        # Pre-compute 3D loss surface for visualization
+        self._compute_loss_surface()
+        
     def compute_predictions(self, slope, intercept):
         if self.train_intercept:
             return slope * self.x_data + intercept
@@ -74,6 +78,29 @@ class GradientDescentDemo:
         
         return slope_gradient, intercept_gradient
     
+    def _compute_loss_surface(self):
+        """Pre-compute the 3D loss surface for visualization"""
+        # Create meshgrid for parameter space
+        slope_vals = np.linspace(self.slope_range[0], self.slope_range[1], 50)
+        intercept_vals = np.linspace(self.intercept_range[0], self.intercept_range[1], 50)
+        self.slope_mesh, self.intercept_mesh = np.meshgrid(slope_vals, intercept_vals)
+        
+        # Compute loss for each point in parameter space
+        self.loss_surface = np.zeros_like(self.slope_mesh)
+        for i in range(self.slope_mesh.shape[0]):
+            for j in range(self.slope_mesh.shape[1]):
+                slope = self.slope_mesh[i, j]
+                intercept = self.intercept_mesh[i, j]
+                self.loss_surface[i, j] = self.compute_error(slope, intercept)
+    
+    def _compute_loss_at_point(self, slope, intercept):
+        """Compute loss at a specific parameter point"""
+        if self.train_intercept:
+            predictions = slope * self.x_data + intercept
+        else:
+            predictions = slope * self.x_data
+        return np.mean((predictions - self.y_data) ** 2)
+    
     def _print_demo_header(self):
         """Print demo header with starting information"""
         batch_desc = f"batch size {self.batch_size}" if self.batch_size else "full batch"
@@ -87,11 +114,11 @@ class GradientDescentDemo:
             print(f"True optimal (with intercept): slope={self.true_optimal_params[1]:.3f}, intercept={self.true_optimal_params[0]:.3f}")
     
     def _create_visualization(self, step):
-        """Create the three-panel visualization"""
+        """Create the four-panel visualization (2x2 grid)"""
         plt.clf()
         
-        # Left plot: Data and fitting lines  
-        plt.subplot(1, 3, 1)
+        # Top-left plot: Data and fitting lines  
+        plt.subplot(2, 2, 1)
         plt.scatter(self.x_data, self.y_data, c='blue', alpha=0.7, label='Data')
         
         # Show faded history of previous lines
@@ -133,8 +160,8 @@ class GradientDescentDemo:
         plt.legend()
         plt.grid(True, alpha=0.3)
         
-        # Middle plot: Error over time
-        plt.subplot(1, 3, 2)
+        # Top-right plot: Error over time
+        plt.subplot(2, 2, 2)
         if len(self.errors_history) > 1:
             plt.plot(range(len(self.errors_history)), self.errors_history, 'b-', linewidth=2)
             plt.scatter([step], [self.errors_history[-1]], color='red', s=50, zorder=5)
@@ -143,8 +170,8 @@ class GradientDescentDemo:
         plt.title('Error Reduction Over Time')
         plt.grid(True, alpha=0.3)
         
-        # Right plot: Parameter space exploration (with fixed dimensions)
-        plt.subplot(1, 3, 3)
+        # Bottom-left plot: Parameter space exploration (with fixed dimensions)
+        plt.subplot(2, 2, 3)
         if len(self.slopes_history) > 1:
             if self.train_intercept:
                 plt.scatter(self.slopes_history[:-1], self.intercepts_history[:-1], 
@@ -174,6 +201,60 @@ class GradientDescentDemo:
                 plt.title('Parameter Space (Slope Only)')
             plt.legend()
             plt.grid(True, alpha=0.3)
+        
+        # Bottom-right plot: 3D Loss Surface
+        ax = plt.subplot(2, 2, 4, projection='3d')
+        
+        if self.train_intercept and len(self.slopes_history) > 1:
+            # Plot the loss surface
+            surf = ax.plot_surface(self.slope_mesh, self.intercept_mesh, self.loss_surface, 
+                                 cmap='coolwarm', alpha=0.6, linewidth=0, antialiased=True)
+            
+            # Plot the parameter path
+            if len(self.slopes_history) > 1:
+                path_losses = [self._compute_loss_at_point(s, i) for s, i in 
+                             zip(self.slopes_history, self.intercepts_history)]
+                ax.plot(self.slopes_history, self.intercepts_history, path_losses, 
+                       'ro-', linewidth=2, markersize=4, alpha=0.8, label='Gradient path')
+                
+                # Highlight current position
+                current_loss = self._compute_loss_at_point(self.slope, self.intercept)
+                ax.scatter([self.slope], [self.intercept], [current_loss], 
+                         color='red', s=100, marker='*', zorder=5)
+                
+                # Mark optimal point
+                optimal_loss = self._compute_loss_at_point(self.optimal_params[1], self.optimal_params[0])
+                ax.scatter([self.optimal_params[1]], [self.optimal_params[0]], [optimal_loss], 
+                         color='orange', s=100, marker='^', zorder=5)
+            
+            ax.set_xlabel('Slope')
+            ax.set_ylabel('Intercept')
+            ax.set_zlabel('Loss')
+            ax.set_title('3D Loss Surface')
+            ax.view_init(elev=30, azim=45)
+        else:
+            # For no-intercept case, show 2D loss curve
+            if len(self.slopes_history) > 1:
+                slope_vals = np.linspace(self.slope_range[0], self.slope_range[1], 100)
+                loss_vals = [self._compute_loss_at_point(s, 0) for s in slope_vals]
+                ax.plot(slope_vals, loss_vals, 'b-', linewidth=2, label='Loss curve')
+                
+                # Plot parameter path
+                path_losses = [self._compute_loss_at_point(s, 0) for s in self.slopes_history]
+                ax.plot(self.slopes_history, path_losses, 'ro-', linewidth=2, markersize=4, alpha=0.8, label='Gradient path')
+                
+                # Current position
+                current_loss = self._compute_loss_at_point(self.slope, 0)
+                ax.scatter([self.slope], [current_loss], color='red', s=100, marker='*', zorder=5)
+                
+                # Optimal position
+                optimal_loss = self._compute_loss_at_point(self.optimal_params[1], 0)
+                ax.scatter([self.optimal_params[1]], [optimal_loss], color='orange', s=100, marker='^', zorder=5)
+                
+                ax.set_xlabel('Slope')
+                ax.set_ylabel('Loss')
+                ax.set_title('Loss vs Slope')
+                ax.legend()
         
         plt.tight_layout()
     
@@ -209,7 +290,7 @@ class GradientDescentDemo:
         self._print_demo_header()
         print("\nPress Enter to see each step...")
         
-        plt.figure(figsize=(20, 5))
+        plt.figure(figsize=(15, 12))
         
         for i in range(self.num_iterations):
             # Store current state
@@ -221,7 +302,7 @@ class GradientDescentDemo:
             # Create visualization
             self._create_visualization(i)
             plt.draw()
-            plt.pause(0.1)
+            plt.pause(0.05)
             
             # Print current state
             self._print_step_info(i)
@@ -241,7 +322,7 @@ class GradientDescentDemo:
         print(f"Using {batch_desc}, learning rate {self.learning_rate}")
         self._print_demo_header()
         
-        plt.figure(figsize=(20, 5))
+        plt.figure(figsize=(15, 12))
         
         for i in range(self.num_iterations):
             # Store current state
