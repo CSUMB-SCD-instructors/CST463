@@ -4,7 +4,7 @@ from matplotlib.animation import FuncAnimation
 import time
 
 class GradientDescentDemo:
-    def __init__(self, learning_rate=0.01, num_iterations=100, train_intercept=True, batch_size=None):
+    def __init__(self, learning_rate=0.01, num_iterations=100, train_intercept=True, batch_size=None, num_samples=200):
         self.learning_rate = learning_rate
         self.num_iterations = num_iterations
         self.train_intercept = train_intercept
@@ -12,8 +12,8 @@ class GradientDescentDemo:
         
         # Generate sample data with non-zero intercept and higher variation
         np.random.seed(42)
-        self.x_data = np.linspace(0, 10, 20)
-        self.y_data = 2.5 * self.x_data + 3.5 + np.random.normal(0, 1.8, 20)
+        self.x_data = np.linspace(0, 10, num_samples)
+        self.y_data = 2.5 * self.x_data + 3.5 + np.random.normal(0, 1.8, num_samples)
         
         # Calculate optimal line using closed form solution
         # ALWAYS calculate the true best fit (with intercept) to show its importance
@@ -112,11 +112,11 @@ class GradientDescentDemo:
         
         # Target optimal line for current model (orange)
         if self.train_intercept:
-            y_optimal = self.optimal_params[1] * self.x_data + self.optimal_params[0]
+            y_optimal = self.optimal_params[1] * np.linspace(self.x_data.min(), self.x_data.max(), 10) + self.optimal_params[0]
         else:
-            y_optimal = self.optimal_params[1] * self.x_data
-        plt.plot(self.x_data, y_optimal, color='orange', linestyle='--', linewidth=2, 
-                marker='^', markersize=4, markevery=3, label='Optimal (current model)')
+            y_optimal = self.optimal_params[1] * np.linspace(self.x_data.min(), self.x_data.max(), 10)
+        plt.plot(np.linspace(self.x_data.min(), self.x_data.max(), 10), y_optimal, color='orange', linestyle='--', linewidth=2,
+                marker='^', markersize=4, label='Optimal (current model)')
         
         # True optimal line with intercept (purple) to show importance of intercept
         if not self.train_intercept:
@@ -237,7 +237,7 @@ class GradientDescentDemo:
     def automatic_demo(self):
         """Automatic demonstration with timed updates"""
         batch_desc = f"batch size {self.batch_size}" if self.batch_size else "full batch"
-        print(f"Running automatic demo with 0.125 second delays...")
+        print(f"Running automatic demo with 0.05 second delays...")
         print(f"Using {batch_desc}, learning rate {self.learning_rate}")
         self._print_demo_header()
         
@@ -253,7 +253,7 @@ class GradientDescentDemo:
             # Create visualization
             self._create_visualization(i)
             plt.draw()
-            plt.pause(0.125)
+            plt.pause(0.05)
             
             # Print current state
             self._print_step_info(i)
@@ -283,10 +283,11 @@ def run_demo():
     
     # Learning rate selection
     lr_input = input("\nLearning rate (default 0.05): ").strip()
-    try:
-        learning_rate = float(lr_input) if lr_input else 0.05
-    except ValueError:
-        learning_rate = 0.05
+    learning_rate = float(lr_input) if lr_input else 0.05
+    
+    # Num samples
+    ns_input = input("\nNumber of samples(default 200): ").strip()
+    num_samples = int(ns_input) if ns_input else 200
     
     # Batch size selection
     print("\nGradient descent type:")
@@ -311,8 +312,13 @@ def run_demo():
         except ValueError:
             num_iterations = 50
         
-        demo = GradientDescentDemo(learning_rate=learning_rate, num_iterations=num_iterations, 
-                                 train_intercept=train_intercept, batch_size=batch_size)
+        demo = GradientDescentDemo(
+          learning_rate=learning_rate,
+          num_iterations=num_iterations,
+          train_intercept=train_intercept,
+          batch_size=batch_size,
+          num_samples=num_samples
+        )
         demo.step_by_step_demo()
     else:
         # Automatic mode
@@ -322,8 +328,13 @@ def run_demo():
         except ValueError:
             num_iterations = 100
         
-        demo = GradientDescentDemo(learning_rate=learning_rate, num_iterations=num_iterations, 
-                                 train_intercept=train_intercept, batch_size=batch_size)
+        demo = GradientDescentDemo(
+          learning_rate=learning_rate,
+          num_iterations=num_iterations,
+          train_intercept=train_intercept,
+          batch_size=batch_size,
+          num_samples=num_samples
+        )
         demo.automatic_demo()
 
 if __name__ == "__main__":
