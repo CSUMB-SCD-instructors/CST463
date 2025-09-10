@@ -206,11 +206,16 @@ def run_demo():
     intercept_choice = input("Enter choice (1 or 2): ").strip()
     train_intercept = intercept_choice != "2"
     
+    try:
+      learning_rate = float(input("\nWhat would you like your learning rate to be?  (0.05)? ").strip())
+    except ValueError:
+      learning_rate = 0.05
+    
     if choice == "1":
-        demo = GradientDescentDemo(learning_rate=0.05, num_iterations=200, train_intercept=train_intercept)
+        demo = GradientDescentDemo(learning_rate=learning_rate, num_iterations=200, train_intercept=train_intercept)
         demo.step_by_step_demo()
     else:
-        demo = GradientDescentDemo(learning_rate=0.05, num_iterations=200, train_intercept=train_intercept)
+        demo = GradientDescentDemo(learning_rate=learning_rate, num_iterations=200, train_intercept=train_intercept)
         
         print("Running automatic demo with 0.05 second delays...")
         if demo.train_intercept:
