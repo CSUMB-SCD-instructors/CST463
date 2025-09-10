@@ -4,10 +4,11 @@ from matplotlib.animation import FuncAnimation
 import time
 
 class GradientDescentDemo:
-    def __init__(self, learning_rate=0.01, num_iterations=100, train_intercept=True):
+    def __init__(self, learning_rate=0.01, num_iterations=100, train_intercept=True, batch_size=None):
         self.learning_rate = learning_rate
         self.num_iterations = num_iterations
         self.train_intercept = train_intercept
+        self.batch_size = batch_size  # None means full batch (all data)
         
         # Generate sample data with non-zero intercept and higher variation
         np.random.seed(42)
@@ -50,17 +51,33 @@ class GradientDescentDemo:
         return np.mean((predictions - self.y_data) ** 2)
     
     def compute_gradients(self, slope, intercept):
-        predictions = self.compute_predictions(slope, intercept)
-        errors = predictions - self.y_data
+        # Stochastic gradient descent: use batch_size samples
+        if self.batch_size is None or self.batch_size >= len(self.x_data):
+            # Full batch gradient descent
+            x_batch = self.x_data
+            y_batch = self.y_data
+        else:
+            # Sample a random batch
+            indices = np.random.choice(len(self.x_data), size=self.batch_size, replace=False)
+            x_batch = self.x_data[indices]
+            y_batch = self.y_data[indices]
         
-        slope_gradient = np.mean(errors * self.x_data)
+        if self.train_intercept:
+            predictions = slope * x_batch + intercept
+        else:
+            predictions = slope * x_batch
+        
+        errors = predictions - y_batch
+        
+        slope_gradient = np.mean(errors * x_batch)
         intercept_gradient = np.mean(errors) if self.train_intercept else 0
         
         return slope_gradient, intercept_gradient
     
     def step_by_step_demo(self):
         """Interactive step-by-step demonstration"""
-        print("=== Gradient Descent Step-by-Step Demo ===")
+        batch_desc = f"batch size {self.batch_size}" if self.batch_size else "full batch"
+        print(f"=== Gradient Descent Step-by-Step Demo ({batch_desc}) ===")
         if self.train_intercept:
             print(f"Starting: slope={self.slope:.3f}, intercept={self.intercept:.3f}")
             print(f"Target optimal: slope={self.optimal_params[1]:.3f}, intercept={self.optimal_params[0]:.3f}")
@@ -166,10 +183,11 @@ class GradientDescentDemo:
             plt.pause(0.1)
             
             # Print current state
+            batch_desc = f" (batch size {self.batch_size})" if self.batch_size else " (full batch)"
             if self.train_intercept:
-                print(f"Step {i}: slope={self.slope:.4f}, intercept={self.intercept:.4f}, error={current_error:.4f}")
+                print(f"Step {i}: slope={self.slope:.4f}, intercept={self.intercept:.4f}, error={current_error:.4f}{batch_desc}")
             else:
-                print(f"Step {i}: slope={self.slope:.4f}, error={current_error:.4f}")
+                print(f"Step {i}: slope={self.slope:.4f}, error={current_error:.4f}{batch_desc}")
             
             if i < self.num_iterations - 1:
                 input("Press Enter for next step...")
@@ -206,18 +224,53 @@ def run_demo():
     intercept_choice = input("Enter choice (1 or 2): ").strip()
     train_intercept = intercept_choice != "2"
     
+    # Learning rate selection
+    lr_input = input("\nLearning rate (default 0.05): ").strip()
     try:
-      learning_rate = float(input("\nWhat would you like your learning rate to be?  (0.05)? ").strip())
+        learning_rate = float(lr_input) if lr_input else 0.05
     except ValueError:
-      learning_rate = 0.05
+        learning_rate = 0.05
+    
+    # Batch size selection
+    print("\nGradient descent type:")
+    print("1. Full batch (use all data points)")
+    print("2. Stochastic (use mini-batches)")
+    
+    batch_choice = input("Enter choice (1 or 2): ").strip()
+    if batch_choice == "2":
+        batch_input = input("Batch size (default 5): ").strip()
+        try:
+            batch_size = int(batch_input) if batch_input else 5
+        except ValueError:
+            batch_size = 5
+    else:
+        batch_size = None
     
     if choice == "1":
-        demo = GradientDescentDemo(learning_rate=learning_rate, num_iterations=200, train_intercept=train_intercept)
+        # Manual mode
+        iter_input = input("\nNumber of iterations (default 50): ").strip()
+        try:
+            num_iterations = int(iter_input) if iter_input else 50
+        except ValueError:
+            num_iterations = 50
+        
+        demo = GradientDescentDemo(learning_rate=learning_rate, num_iterations=num_iterations, 
+                                 train_intercept=train_intercept, batch_size=batch_size)
         demo.step_by_step_demo()
     else:
-        demo = GradientDescentDemo(learning_rate=learning_rate, num_iterations=200, train_intercept=train_intercept)
+        # Automatic mode
+        iter_input = input("\nNumber of iterations (default 100): ").strip()
+        try:
+            num_iterations = int(iter_input) if iter_input else 100
+        except ValueError:
+            num_iterations = 100
         
-        print("Running automatic demo with 0.05 second delays...")
+        demo = GradientDescentDemo(learning_rate=learning_rate, num_iterations=num_iterations, 
+                                 train_intercept=train_intercept, batch_size=batch_size)
+        
+        batch_desc = f"batch size {demo.batch_size}" if demo.batch_size else "full batch"
+        print(f"Running automatic demo with 0.125 second delays...")
+        print(f"Using {batch_desc}, learning rate {demo.learning_rate}")
         if demo.train_intercept:
             print(f"Starting: slope={demo.slope:.3f}, intercept={demo.intercept:.3f}")
             print(f"Target optimal: slope={demo.optimal_params[1]:.3f}, intercept={demo.optimal_params[0]:.3f}")
@@ -320,13 +373,14 @@ def run_demo():
             
             plt.tight_layout()
             plt.draw()
-            plt.pause(0.05)
+            plt.pause(0.125)
             
             # Print current state
+            batch_desc = f" (batch size {demo.batch_size})" if demo.batch_size else " (full batch)"
             if demo.train_intercept:
-                print(f"Step {i}: slope={demo.slope:.4f}, intercept={demo.intercept:.4f}, error={current_error:.4f}")
+                print(f"Step {i}: slope={demo.slope:.4f}, intercept={demo.intercept:.4f}, error={current_error:.4f}{batch_desc}")
             else:
-                print(f"Step {i}: slope={demo.slope:.4f}, error={current_error:.4f}")
+                print(f"Step {i}: slope={demo.slope:.4f}, error={current_error:.4f}{batch_desc}")
             
             if i < demo.num_iterations - 1:
                 # THE SIMPLE GRADIENT DESCENT LOOP! (Same as manual mode)
