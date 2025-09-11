@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from mpl_toolkits.mplot3d import Axes3D
 import time
+import argparse
 
 class GradientDescentDemo:
     def __init__(self, learning_rate=0.01, num_iterations=100, train_intercept=True, batch_size=None, num_samples=200):
@@ -397,8 +398,46 @@ class GradientDescentDemo:
         self._print_final_results()
 
 
-def run_demo():
-    """Run the interactive demo"""
+def parse_arguments():
+    """Parse command line arguments"""
+    parser = argparse.ArgumentParser(
+        description='Interactive Gradient Descent Demo for Linear Regression',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python gradient_descent_demo.py                           # Interactive mode
+  python gradient_descent_demo.py --auto                    # Automatic mode with defaults
+  python gradient_descent_demo.py --step-by-step --lr 0.1   # Step-by-step with learning rate 0.1
+  python gradient_descent_demo.py --no-intercept --batch 10 # No intercept, batch size 10
+  python gradient_descent_demo.py --auto --lr 0.01 --iter 200 --samples 500  # Full config
+        """)
+    
+    # Mode selection
+    mode_group = parser.add_mutually_exclusive_group()
+    mode_group.add_argument('--step-by-step', '-s', action='store_true',
+                           help='Run step-by-step demo (press Enter for each step)')
+    mode_group.add_argument('--auto', '-a', action='store_true',
+                           help='Run automatic demo with timed updates')
+    
+    # Model parameters
+    parser.add_argument('--learning-rate', '--lr', type=float, default=0.05,
+                       help='Learning rate (default: 0.05)')
+    parser.add_argument('--iterations', '--iter', type=int, default=None,
+                       help='Number of iterations (default: 50 for step-by-step, 100 for auto)')
+    parser.add_argument('--samples', type=int, default=200,
+                       help='Number of data samples (default: 200)')
+    
+    # Training options
+    parser.add_argument('--no-intercept', action='store_true',
+                       help='Force line through origin (no intercept/bias training)')
+    parser.add_argument('--batch', type=int, default=None,
+                       help='Batch size for stochastic gradient descent (default: full batch)')
+    
+    return parser.parse_args()
+
+
+def run_demo_interactive():
+    """Run the interactive demo (original behavior)"""
     print("Choose demo mode:")
     print("1. Step-by-step (press Enter for each step)")
     print("2. Quick run (automatic)")
@@ -467,6 +506,57 @@ def run_demo():
           num_samples=num_samples
         )
         demo.automatic_demo()
+
+
+def run_demo_with_args(args):
+    """Run demo with command line arguments"""
+    # Determine mode
+    if args.step_by_step:
+        step_by_step = True
+        num_iterations = args.iterations if args.iterations else 50
+    else:  # Default to auto mode
+        step_by_step = False
+        num_iterations = args.iterations if args.iterations else 100
+    
+    # Set up parameters
+    train_intercept = not args.no_intercept
+    
+    print(f"Running gradient descent demo with:")
+    print(f"  Mode: {'Step-by-step' if step_by_step else 'Automatic'}")
+    print(f"  Learning rate: {args.learning_rate}")
+    print(f"  Iterations: {num_iterations}")
+    print(f"  Samples: {args.samples}")
+    print(f"  Train intercept: {train_intercept}")
+    print(f"  Batch size: {args.batch if args.batch else 'Full batch'}")
+    print()
+    
+    # Create and run demo
+    demo = GradientDescentDemo(
+        learning_rate=args.learning_rate,
+        num_iterations=num_iterations,
+        train_intercept=train_intercept,
+        batch_size=args.batch,
+        num_samples=args.samples
+    )
+    
+    if step_by_step:
+        demo.step_by_step_demo()
+    else:
+        demo.automatic_demo()
+
+
+def run_demo():
+    """Main entry point - handle both interactive and command-line modes"""
+    import sys
+    
+    # If no arguments provided, run interactive mode
+    if len(sys.argv) == 1:
+        run_demo_interactive()
+    else:
+        # Parse and run with command line arguments
+        args = parse_arguments()
+        run_demo_with_args(args)
+
 
 if __name__ == "__main__":
     run_demo()
