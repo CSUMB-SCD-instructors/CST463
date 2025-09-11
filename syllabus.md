@@ -53,7 +53,7 @@ Details can be found in the [course calendar](calendar.md)
   - E-mail: [`sogden@csumb.edu`](mailto:sogden@csumb.edu)
   - Web: [**`https://csumb.edu/scd/sogden/`**](https://csumb.edu/scd/sogden/)
   - Office: BIT205
-  - Office Hours: 2pm-3pm Mondays & 11am-12noon Thursdays, or [by appointment](https://calendly.com/sogden-csumb/15min)
+  - Office Hours: 2pm-3pm Mondays & 10am-11pm Thursdays, or [by appointment](https://calendly.com/sogden-csumb/15min)
 
 #### Contacting me
 
