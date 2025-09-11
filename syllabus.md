@@ -4,40 +4,23 @@
 
 In this course you will learn to use advanced machine learning methods, including dimensionality reduction, ensemble methods, neural nets, and methods for working with time series data.
 
-[//]: # (- **Grading:**)
 
-[//]: # (There are three assignment groups that you must achieve a minimum grade of 40% in to pass the course.)
+- **Grading:**
+*Details can be found in [grading section](#grading).*
 
-[//]: # (They are [Programming Assignments]&#40;#programming-assignments&#41; &#40;35%&#41;, [Exams]&#40;#exams&#41; &#40;35%&#41;, and [Participation]&#40;#participation&#41; &#40;30%&#41;.)
-
-[//]: # (Final grades are calculated by rounding to the nearest whole number and converted to letter grades using the standard range.)
-
-[//]: # (*Details can be found in [grading]&#40;#grading&#41;.*)
-
-[//]: # ()
-[//]: # (- **Late work:**)
-
-[//]: # (Late submissions are accepted only for Programming assignments and Labs, and have a 10% deduction per calendar day late.)
-
-[//]: # (*Details can be found in [late policy]&#40;#late-policy&#41;.*)
-
-[//]: # ()
-[//]: # (- **Getting help:**)
-
-[//]: # (There are a ton of office hours spread throughout the week so make use of them if you have any questions!)
-
-[//]: # (In general, you can use the [class slack channel]&#40;#&#41; to ask questions &#40;but not post code!&#41;, or send me questions &#40;code okay!&#41; via slack or my email.)
-
-[//]: # (You are **not** allowed to use LLMs or classmates to write code for you, but you can ask them clarifying questions about material.)
-
-[//]: # (*Details can be found in [personnel]&#40;#personnel&#41;.*)
-
-[//]: # ()
-[//]: # (**Any other questions?**)
-
-[//]: # (I tried to make this document exhaustive &#40;and it just turned out exhausting...&#41;, but if there's something you can't find an answer to don't hesitate to reach out via slack or email!)
+- **Late work:**
+*Details can be found in [late policy](#late-policy).*
+  
+- **Getting help:**
+*Details can be found in [Instructor Information](#instructor-information).*
 
 ## Course Information
+
+### Course Details
+
+- **Course Title:** Advanced Machine Learning
+- **Course Number:** CST463
+- **Prerequisites:** CST383
 
 ### Course Description
 
@@ -45,7 +28,7 @@ In this course you will learn to use advanced machine learning methods, includin
 
 ### Course Objectives
 
-At the end of this class, you should be able to do the following:
+At the end of this class, you should be able to:
 - Apply deep learning to machine-learning problems of moderate complexity, using Google’s TensorFlow library and Python.
 - Explain and implement machine learning algorithms using loss functions and optimization, including the use of backpropagation in neural nets.
 - Explain the principles behind dimensionality reduction and ensemble methods (including random forests and boosting).
@@ -64,7 +47,6 @@ The major topics covered in class are:
 
 Details can be found in the [course calendar](calendar.md)
 
-
 ### Personnel
 
 - Dr. Sam Ogden (instructor)
@@ -72,6 +54,11 @@ Details can be found in the [course calendar](calendar.md)
   - Web: [**`https://csumb.edu/scd/sogden/`**](https://csumb.edu/scd/sogden/)
   - Office: BIT205
   - Office Hours: 2pm-3pm Mondays & 11am-12noon Thursdays, or [by appointment](https://calendly.com/sogden-csumb/15min)
+
+#### Contacting me
+
+You can reach me via email (sogden@csumb.edu), or via slack by either DM or tagging me in a message to the channel.
+In general, I will not see or respond to canvas messages/comments so please use slack or email to contact me.
 
 ### Materials
 
@@ -82,9 +69,6 @@ Details can be found in the [course calendar](calendar.md)
 - Canvas Course Page: [Canvas link](https://csumb.instructure.com/courses/29740)
 - Syllabus: [syllabus.md](syllabus.md)
 
-### Prerequisites/Corequisites
-
-- **CST383**: Introduction to Data Science 
 
 ## Grading
 
@@ -136,15 +120,6 @@ In-class participation has three components:
 2. (5%) Attendance: Show up to class on time every day
 3. (2%) Weekly Surveys: to help me understand how to improve class
 
-### Extra Credit Potential
-
-#### Bug Hunting
-
-We all make mistakes – my github commit history is proof of that.
-Sometimes you catch big ones before I do, and if you let me know I might throw some extra credit your way.
-This is generally reserved for big things (e.g. I left out a bunch of files in the repo or some tools out of the docker image), but if you find yourself confused by something please reach out, maybe you found a novel bug!
-[^1]
-
 ### Grade Assignment
 
 Grades as assigned based on the standard ranges, which are outlined below.
@@ -172,47 +147,31 @@ Class attendance is one of the strongest factors for student performance.
 Attendance will be tracked either manually or with an attendance quiz.
 While no retakes of a quiz or attendance will be allowed, the lowest 2 will be dropped.
 
-### Communication
-
-#### Contacting me
-
-You can reach me via email (sogden@csumb.edu, or via slack by either DM or tagging me in a message to the channel.
-In general, I will not see or respond to canvas messages/comments so please use slack or email to contact me.
-
-#### Communicating online
-
-I will use email, Canvas, and Slack for online class communication.
-
-1.  **email** is to be used when you need to officially communicate something to me.
-  - e.g. “Can you double check this assignment grade for me?”
-2.  **Slack** will be used to answer content questions and give quick updates.
-  - e.g. “I think I found a bug in this quiz, could you check it out?”
-  - We have a slack channel named [\#cst463-fall2025](https://cs-you-monterey.slack.com/archives/C09BPTUFLAH) on the [CS-U-Monterey](https://cs-you-monterey.slack.com/archives/C04LQ29KWV6) workspace that you should join.
-3.  **Canvas** will have information on assignments and due dates
-  - In general I don’t see canvas messages, and the likelihood of me seeing a comment on an assignment is extremely low. If you have questions for comments for me please reach out via either slack or email.
-
 ### Late Policy
 
 No late work will be accepted and no extensions will be granted.
 
-[//]: # (These two exceptions are programming assignments and lab assignments, both of which can be submitted with a late penalty at any point before the Sunday prior to final exam week.)
-
-[//]: # (This late penalty will be a 10% reduction in maximum points per day, with a maximum reduction of 60%[^3].)
+The only exception to this is that the coding parts of homework can be turned in late, for a penalty.  
+However, this will impact your ability to complete the visualization component so it is not recommended.
 
 **If you do fall behind in class, please set up a time to meet with me to discuss getting you back on track – my goal is to have you succeed in class and I want to find a way to make that happen.**
 
 ## Academic Honor Code
 
-In addition to the department- and school-wide policies on academic honesty outlined elsewhere on canvas, I wanted to emphasize a few key points about expectations in class.
+**You may talk to other students or LLMs for:**
 
-### Motivation
+- Clarification on topics covered in class
+- Clarification of what *provided* code is doing
+- Generating more examples
+- Understanding compiler errors
 
-This class aims to help you learn how to approach systems problems in computer science, consider alternatives, and develop effective solutions.
-In your career, it will be important to not just be able to write code, but also to think about how this code fits into a larger ecosystem and the trade-offs being made.
-These are skills that are essential, and are not developed in isolation, but need to be core skills you can demonstrate during interviews and jobs.
-Therefore, you should learn to search out resources, understand when to ask for more, but also be capable of applying these approaches on your own.
+**You may *not* talk to other students or LLMs for:**
 
-### Summary of policy
+- Code and assignment answers
+- Exam questions and answers
+
+### The use of LLMs
+
 
 **You may talk to other students or LLMs (e.g. ChatGPT) for:**
 
@@ -226,19 +185,7 @@ Therefore, you should learn to search out resources, understand when to ask for 
 - Code and checkpoints answers – i.e. do not copy-and-paste code or answers from other students or LLMs
 - Exam questions and answers
 
-### Getting Help
-
-If you have problems with the homework, please ask the instructor or TA for help.
-On coding assignments, you may also get help from fellow students, but you must follow the [Stanford Honor Code](https://communitystandards.stanford.edu/policies-guidance/honor-code)
-
-1.  You *must not* look at solutions or program code that are not your own.
-2.  You *must not* share your solution code with others, and must maintain the privacy of your solution.
-3.  You *must* indicate on your submission any assistance you received.
-
-To enforce this, I will typically read your code and use a code similarity checker.
-If I have concerns, I will let you know, either through a comment on canvas or an email.
-
-### The use of LLMs
+#### Details
 
 At the highest level, the use of LLMs in this class is ***prohibited** for programming assignments* and ***encouraged** for improving your own understanding of material*.
 Large Language Models (LLMs), such as ChatGPT and GPT4.0, are powerful language generation models.
@@ -261,18 +208,35 @@ You *may not* use LLMs for producing code for programming assignments, but *may*
 They can clarify complex topics we learned in class, give you alternative explanations and can be incredibly helpful in understanding errors and problems.
 However, it is important to be able to identify *good* examples and *bad* examples of LLM output.
 
-### COVID-19 Classroom Policy
 
-Please familiarize yourself with the CSUMB COVID-19 policies, which can be found [here](https://csumb.edu/health/coronavirus-information/).
-In short, campus, and class, is a mask-friendly environment.
-If you have been exposed to COVID-19 or are COVID-19 positive please stay home from class and contact me to arrange to attend virtually.
-This also generally applies when you are ill due to other causes – instead of coming to class while sick, please reach out, and we can make a plan.
+### University Academic Integrity Policy
 
+For complete academic integrity policies, please refer to the [CSUMB Academic Integrity Policy](https://csumb.edu/policy/academic-integrity-policy).
 
-[^1]: As a heads up, don’t edit your unit tests until after you’ve checked with me! If it’s going to lead to changes in the test I’ll make sure there’s an announcement about it!
+## University Policies and Resources
 
-[^2]: “\[C\]lass attendance \[is\] a better predictor of college grades than any other known predictor of academic performance” from <https://doi.org/10.3102/0034654310362998>
+### Enrollment and Registration
 
-[^4]: Although LLMs are notoriously bad at math so be very wary of their calculations.
+For information about requesting an incomplete or withdrawal from the course, please refer to CSUMB's [Enrollment and Registration Policy](https://csumb.edu/policy/enrollment-registration-policy).
 
-[^5]: Although I recommend you talk to the TAs or the instructor since we likely have a better idea of what the assignment is asking.
+For grade appeals, consult the [Grade Appeal Policy](https://csumb.edu/policy/grade-appeal-policy).
+
+### Disability Services
+
+If you have a disability that may require academic accommodations, please contact the [Student Disability Resources](https://csumb.edu/sdr) office as soon as possible. All discussions will remain confidential. Students who have already received approval for accommodations from SDR should schedule a meeting with the instructor as early in the semester as possible.
+
+### Collection of Student Work
+
+Student work may be collected and used for course assessment and improvement purposes. By enrolling in this course, you consent to the collection and analysis of your academic work for educational assessment. All student work will be handled confidentially and in accordance with FERPA regulations.
+
+## Syllabus Change Policy
+
+This syllabus is subject to change at the instructor's discretion to enhance learning or accommodate unforeseen circumstances. Students will be notified of any substantive changes (such as changes to due dates, point values of assignments, or major policy modifications) via Canvas announcement and/or email at least one week in advance when possible. 
+
+The process for syllabus changes:
+1. Instructor identifies need for change
+2. Revised syllabus section is prepared
+3. Students are notified via Canvas and email
+4. Change takes effect after notification period
+
+Students are responsible for staying current with any announced changes to the syllabus.
