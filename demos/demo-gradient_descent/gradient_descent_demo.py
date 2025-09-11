@@ -11,6 +11,7 @@ class GradientDescentDemo:
         self.num_iterations = num_iterations
         self.train_intercept = train_intercept
         self.batch_size = batch_size  # None means full batch (all data)
+        self.num_samples = num_samples
         
         # Generate sample data with non-zero intercept and higher variation
         np.random.seed(42)
@@ -63,8 +64,8 @@ class GradientDescentDemo:
             x_batch = self.x_data
             y_batch = self.y_data
         else:
-            # Sample a random batch
-            indices = np.random.choice(len(self.x_data), size=self.batch_size, replace=False)
+            # Sample a random batch - use efficient random sampling
+            indices = np.random.randint(0, len(self.x_data), size=self.batch_size)
             x_batch = self.x_data[indices]
             y_batch = self.y_data[indices]
         
@@ -396,6 +397,45 @@ class GradientDescentDemo:
         
         plt.show()
         self._print_final_results()
+    
+    def headless_demo(self):
+        """Headless demonstration without visualization for performance timing"""
+        import time
+        
+        batch_desc = f"batch size {self.batch_size}" if self.batch_size else "full batch"
+        print(f"Running headless demo for performance timing...")
+        print(f"Using {batch_desc}, learning rate {self.learning_rate}")
+        print(f"Samples: {self.num_samples}, Iterations: {self.num_iterations}")
+        print(f"Train intercept: {self.train_intercept}")
+        print()
+        
+        # Record start time
+        start_time = time.time()
+        
+        # Run gradient descent without visualization
+        current_error = 0.0  # Initialize current_error
+        for i in range(self.num_iterations):
+            # Store current state for potential analysis
+            self.slopes_history.append(self.slope)
+            self.intercepts_history.append(self.intercept)
+            current_error = self._compute_loss_at_point(self.slope, self.intercept)
+            self.errors_history.append(current_error)
+            
+            # Update parameters
+            if i < self.num_iterations - 1:
+                self._update_parameters()
+        
+        # Record end time and calculate duration
+        end_time = time.time()
+        duration = end_time - start_time
+        
+        # Print timing results
+        print(f"Training completed in {duration:.4f} seconds")
+        print(f"Final loss: {current_error:.6f}")
+        print(f"Final parameters: slope={self.slope:.4f}, intercept={self.intercept:.4f}")
+        if hasattr(self, 'optimal_params'):
+            print(f"Target parameters: slope={self.optimal_params[1]:.4f}, intercept={self.optimal_params[0]:.4f}")
+        print(f"Iterations per second: {self.num_iterations/duration:.1f}")
 
 
 def parse_arguments():
@@ -410,6 +450,7 @@ Examples:
   python gradient_descent_demo.py --step-by-step --lr 0.1   # Step-by-step with learning rate 0.1
   python gradient_descent_demo.py --no-intercept --batch 10 # No intercept, batch size 10
   python gradient_descent_demo.py --auto --lr 0.01 --iter 200 --samples 500  # Full config
+  python gradient_descent_demo.py --headless --samples 2000 # Headless mode for timing
         """)
     
     # Mode selection
@@ -418,6 +459,8 @@ Examples:
                            help='Run step-by-step demo (press Enter for each step)')
     mode_group.add_argument('--auto', '-a', action='store_true',
                            help='Run automatic demo with timed updates')
+    mode_group.add_argument('--headless', action='store_true',
+                           help='Run headless mode without visualization (for performance timing)')
     
     # Model parameters
     parser.add_argument('--learning-rate', '--lr', type=float, default=0.05,
@@ -512,23 +555,29 @@ def run_demo_with_args(args):
     """Run demo with command line arguments"""
     # Determine mode
     if args.step_by_step:
-        step_by_step = True
+        mode = 'step_by_step'
         num_iterations = args.iterations if args.iterations else 50
+    elif args.headless:
+        mode = 'headless'
+        num_iterations = args.iterations if args.iterations else 1000  # More iterations for timing
     else:  # Default to auto mode
-        step_by_step = False
+        mode = 'auto'
         num_iterations = args.iterations if args.iterations else 100
     
     # Set up parameters
     train_intercept = not args.no_intercept
     
-    print(f"Running gradient descent demo with:")
-    print(f"  Mode: {'Step-by-step' if step_by_step else 'Automatic'}")
-    print(f"  Learning rate: {args.learning_rate}")
-    print(f"  Iterations: {num_iterations}")
-    print(f"  Samples: {args.samples}")
-    print(f"  Train intercept: {train_intercept}")
-    print(f"  Batch size: {args.batch if args.batch else 'Full batch'}")
-    print()
+    # Print configuration for non-headless modes
+    if mode != 'headless':
+        print(f"Running gradient descent demo with:")
+        mode_names = {'step_by_step': 'Step-by-step', 'auto': 'Automatic', 'headless': 'Headless'}
+        print(f"  Mode: {mode_names[mode]}")
+        print(f"  Learning rate: {args.learning_rate}")
+        print(f"  Iterations: {num_iterations}")
+        print(f"  Samples: {args.samples}")
+        print(f"  Train intercept: {train_intercept}")
+        print(f"  Batch size: {args.batch if args.batch else 'Full batch'}")
+        print()
     
     # Create and run demo
     demo = GradientDescentDemo(
@@ -539,9 +588,11 @@ def run_demo_with_args(args):
         num_samples=args.samples
     )
     
-    if step_by_step:
+    if mode == 'step_by_step':
         demo.step_by_step_demo()
-    else:
+    elif mode == 'headless':
+        demo.headless_demo()
+    else:  # auto mode
         demo.automatic_demo()
 
 
