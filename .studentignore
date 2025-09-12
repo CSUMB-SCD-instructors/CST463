@@ -5,8 +5,7 @@
 /docker/
 
 # Scripts directory contains internal/instructor tools
-/scripts/
-!/scripts/grader.py
+# /scripts/
 
 # Deployment keys and sensitive configuration
 *.pub
