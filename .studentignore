@@ -6,6 +6,7 @@
 
 # Scripts directory contains internal/instructor tools
 /scripts/
+!/scripts/grader.py
 
 # Deployment keys and sensitive configuration
 *.pub
@@ -15,5 +16,3 @@
 .studentignore
 
 CLAUDE.md
-
-scripts/*.md
