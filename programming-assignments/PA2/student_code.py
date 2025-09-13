@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""
+PA2: Gradient Descent & Linear Regression
+
+Note: Some tests may initially pass due to edge case handling in the redacted functions,
+but all functions need proper implementation to work correctly in the full pipeline.
+"""
 
 import numpy as np
 from typing import Callable, Tuple, List
@@ -7,9 +13,9 @@ from typing import Callable, Tuple, List
 def numerical_derivative(f: Callable, x: np.ndarray, dimension: int, h: float = 1e-5) -> float:
     """
     Compute the numerical partial derivative of a function at a point.
-    
+
     Uses the central difference formula: f'(x) ≈ (f(x+h) - f(x-h)) / (2*h)
-    
+
     Parameters
     ----------
     f : Callable
@@ -21,12 +27,12 @@ def numerical_derivative(f: Callable, x: np.ndarray, dimension: int, h: float = 
         For single-variable functions, use dimension=0.
     h : float, optional
         Small step size for numerical approximation. Default is 1e-5.
-        
+
     Returns
     -------
     float
         The numerical partial derivative ∂f/∂x_dimension at point x.
-        
+
     Examples
     --------
     >>> def f(x): return x[0]**2 + x[1]**2  # f(x,y) = x² + y²
@@ -34,20 +40,8 @@ def numerical_derivative(f: Callable, x: np.ndarray, dimension: int, h: float = 
     >>> numerical_derivative(f, x, dimension=0)  # ∂f/∂x = 2x = 4.0
     4.0
     """
-    # Create copy to avoid modifying input
-    x_copy = x.copy()
-    
-    # Calculate f(x + h)
-    x_copy[dimension] += h
-    f_plus = f(x_copy)
-    
-    # Calculate f(x - h)
-    x_copy[dimension] = x[dimension] - h
-    f_minus = f(x_copy)
-    
-    # Central difference formula
-    derivative = (f_plus - f_minus) / (2 * h)
-    return derivative
+    # TODO: Implement numerical derivative using central difference formula
+    pass
 
 
 def numerical_gradient(f: Callable, x: np.ndarray, h: float = 1e-5) -> np.ndarray:
@@ -77,12 +71,8 @@ def numerical_gradient(f: Callable, x: np.ndarray, h: float = 1e-5) -> np.ndarra
     >>> numerical_gradient(f, x)  # [∂f/∂x, ∂f/∂y] = [2x, 4y] = [2.0, 8.0]
     array([2.0, 8.0])
     """
-    gradient = np.zeros(len(x))
-    
-    for i in range(len(x)):
-        gradient[i] = numerical_derivative(f, x, dimension=i, h=h)
-    
-    return gradient
+    # TODO: Compute partial derivatives for each dimension
+    pass
 
 
 def linear_predict(X: np.ndarray, weights: np.ndarray) -> np.ndarray:
@@ -110,7 +100,8 @@ def linear_predict(X: np.ndarray, weights: np.ndarray) -> np.ndarray:
     >>> linear_predict(X, weights)
     array([2.5, 5.5])  # [1*0.5 + 2*1.0, 3*0.5 + 4*1.0]
     """
-    return X @ weights
+    # TODO: Implement matrix multiplication
+    pass
 
 
 def mse_cost(y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -138,8 +129,8 @@ def mse_cost(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     >>> mse_cost(y_true, y_pred)
     0.0067  # approximately
     """
-    errors = y_true - y_pred
-    return np.mean(errors ** 2)
+    # TODO: Implement mean squared error
+    pass
 
 
 def mse_gradient(X: np.ndarray, y: np.ndarray, weights: np.ndarray) -> np.ndarray:
@@ -171,11 +162,8 @@ def mse_gradient(X: np.ndarray, y: np.ndarray, weights: np.ndarray) -> np.ndarra
     >>> mse_gradient(X, y, weights)
     array([-5.0, -8.0])  # gradient when predictions are all zeros
     """
-    n_samples = X.shape[0]
-    predictions = linear_predict(X, weights)
-    errors = predictions - y
-    gradient = (2 / n_samples) * (X.T @ errors)
-    return gradient
+    # TODO: Implement ∇MSE = (2/n) * X^T @ (X@w - y)
+    pass
 
 
 def initialize_weights(n_features: int, method: str = 'zeros') -> np.ndarray:
@@ -204,14 +192,8 @@ def initialize_weights(n_features: int, method: str = 'zeros') -> np.ndarray:
     >>> np.random.seed(42); initialize_weights(2, method='small_random')
     array([0.00496714, -0.00138264])  # small random values
     """
-    if method == 'zeros':
-        return np.zeros(n_features)
-    elif method == 'random':
-        return np.random.randn(n_features)
-    elif method == 'small_random':
-        return 0.01 * np.random.randn(n_features)
-    else:
-        raise ValueError(f"Unknown initialization method: {method}")
+    # TODO: Handle different initialization methods
+    pass
 
 
 def gradient_descent_step(X: np.ndarray, y: np.ndarray, weights: np.ndarray, 
@@ -246,17 +228,8 @@ def gradient_descent_step(X: np.ndarray, y: np.ndarray, weights: np.ndarray,
     >>> new_weights
     array([0.5, 0.8])  # weights moved in direction opposite to gradient
     """
-    # Calculate current cost
-    predictions = linear_predict(X, weights)
-    cost = mse_cost(y, predictions)
-    
-    # Calculate gradient
-    gradient = mse_gradient(X, y, weights)
-    
-    # Update weights
-    new_weights = weights - learning_rate * gradient
-    
-    return new_weights, cost
+    # TODO: Update rule: w_new = w_old - learning_rate * gradient
+    pass
 
 
 def gradient_descent(X: np.ndarray, y: np.ndarray, learning_rate: float, 
@@ -292,15 +265,8 @@ def gradient_descent(X: np.ndarray, y: np.ndarray, learning_rate: float,
     >>> costs[-1] < costs[0]  # Cost should decrease
     True
     """
-    # Initialize weights to zeros
-    weights = initialize_weights(X.shape[1], method='zeros')
-    cost_history = []
-    
-    for epoch in range(epochs):
-        weights, cost = gradient_descent_step(X, y, weights, learning_rate)
-        cost_history.append(cost)
-    
-    return weights, cost_history
+    # TODO: Initialize weights and iterate gradient descent steps
+    pass
 
 
 def add_intercept(X: np.ndarray) -> np.ndarray:
@@ -327,8 +293,8 @@ def add_intercept(X: np.ndarray) -> np.ndarray:
     array([[1, 1, 2],
            [1, 3, 4]])  # First column is all ones for bias term
     """
-    ones_column = np.ones((X.shape[0], 1))
-    return np.column_stack([ones_column, X])
+    # TODO: Prepend column of ones
+    pass
 
 
 def generate_synthetic_data(n_samples: int, n_features: int, noise: float = 0.1, 
@@ -364,19 +330,8 @@ def generate_synthetic_data(n_samples: int, n_features: int, noise: float = 0.1,
     (100,)
     >>> # Data follows linear relationship: y ≈ X @ true_weights + noise
     """
-    # Set random seed for reproducibility
-    np.random.seed(seed)
-    
-    # Generate random feature matrix
-    X = np.random.randn(n_samples, n_features)
-    
-    # Generate random true weights
-    true_weights = np.random.randn(n_features)
-    
-    # Generate targets with linear relationship plus noise
-    y = X @ true_weights + noise * np.random.randn(n_samples)
-    
-    return X, y
+    # TODO: Generate X, true_weights, and y = X @ true_weights + noise
+    pass
 
 
 def has_converged(cost_history: List[float], tolerance: float = 1e-6) -> bool:
@@ -407,15 +362,8 @@ def has_converged(cost_history: List[float], tolerance: float = 1e-6) -> bool:
     >>> has_converged([1.0, 0.8, 0.6, 0.4], tolerance=1e-6)
     False  # Still decreasing significantly
     """
-    # Need at least 3 points to check convergence
-    if len(cost_history) < 3:
-        return False
-    
-    # Check if recent changes are below tolerance
-    recent_costs = cost_history[-3:]
-    max_change = max(abs(recent_costs[i] - recent_costs[i-1]) for i in range(1, len(recent_costs)))
-    
-    return max_change < tolerance
+    # TODO: Check if recent cost changes are below tolerance
+    pass
 
 
 if __name__ == "__main__":
