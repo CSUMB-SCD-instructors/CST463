@@ -107,6 +107,36 @@ Programming assignments follow a consistent two-part structure designed to reinf
 
 This approach ensures students both understand the mathematical foundations and can apply them effectively to real problems.
 
+## Rubric Design Best Practices
+
+### Avoiding Answer Revelation in Rubrics
+**Critical Issue**: Rubrics can inadvertently become answer keys by specifying exactly what conclusions constitute "excellent" work. This defeats the purpose of analytical assignments where students should conduct experiments, observe patterns, and draw evidence-based conclusions.
+
+**Problem Examples:**
+- "Correctly identifies optimal h range around 1e-5 to 1e-6" (gives away the specific numerical answer)
+- "Explains that large h causes inaccurate derivatives due to linear approximation breakdown" (provides the exact explanation students should discover)
+- "Recognizes that small learning rates converge slowly but stably" (tells students what pattern to identify)
+
+**Solution Approach:**
+Evaluate the quality of reasoning, evidence usage, and depth of analysis rather than matching specific predetermined conclusions.
+
+**Better Rubric Language:**
+- Instead of: "Correctly identifies optimal range around X to Y"
+  Use: "Identifies a reasonable range with clear justification"
+- Instead of: "Explains that [specific phenomenon] causes [specific effect]"
+  Use: "Provides reasonable explanation for observed effects"
+- Instead of: "Recognizes [specific pattern]"
+  Use: "Identifies meaningful patterns with supporting evidence"
+
+### Rubric Design Principles
+- **Focus on Process**: Evaluate how students analyze, not what they conclude
+- **Evidence-Based Assessment**: Reward use of experimental data to support reasoning
+- **Reasoning Quality**: Assess logical consistency and depth of thinking
+- **Multiple Valid Paths**: Allow for different reasonable conclusions with proper justification
+- **Avoid Specificity**: Use general descriptors rather than exact numerical values or phenomena
+
+This approach maintains academic rigor while allowing genuine discovery and analysis rather than answer-matching.
+
 ## Important Notes
 
 - No package.json, Makefile, or traditional build system - this is a content management template
