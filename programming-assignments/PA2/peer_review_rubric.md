@@ -7,10 +7,10 @@
 ## 1. Delta-h Sensitivity Analysis (6 points)
 
 **Excellent (5-6 points):**
-- Correctly identifies optimal h range around 1e-5 to 1e-6
-- Clearly explains trade-off between approximation error (large h) and numerical precision error (small h)
-- Demonstrates understanding that large h causes inaccurate derivatives due to linear approximation breakdown
-- Explains that very small h causes floating-point precision issues
+- Identifies a reasonable optimal h range with clear justification
+- Clearly explains trade-off between different types of numerical errors
+- Demonstrates understanding of why different h values cause different problems
+- Shows awareness of floating-point precision limitations
 - Makes explicit connection to gradient descent reliability and accuracy
 
 **Good (3-4 points):**
@@ -28,10 +28,10 @@
 ## 2. Learning Rate Exploration & Analysis (7 points)
 
 **Excellent (6-7 points):**
-- Correctly identifies effects of different learning rates on convergence behavior
-- Recognizes that small learning rates converge slowly but stably
-- Identifies oscillation patterns or divergence with large learning rates
-- Shows understanding of the "Goldilocks zone" for learning rate selection
+- Identifies and explains effects of different learning rates on convergence behavior
+- Demonstrates understanding of stability vs speed trade-offs
+- Recognizes problematic patterns that can occur with poor learning rate choices
+- Shows understanding of how to balance convergence requirements
 - Provides practical guidelines for learning rate selection in new problems
 - Cost curve visualizations clearly support their analysis
 
@@ -80,10 +80,10 @@
 ## 4. Comparative Studies Analysis (5 points)
 
 **Excellent (5 points):**
-- **Initialization Methods**: Correctly analyzes effects of zeros, random, and small_random initialization
-- Explains why different initializations affect convergence speed and final results
-- **Feature Scaling**: Demonstrates clear understanding of why unscaled features cause convergence problems
-- Explains that different feature scales create "stretched" optimization landscapes
+- **Initialization Methods**: Thoughtfully analyzes effects of different initialization strategies
+- Explains reasoning behind observed differences in convergence behavior
+- **Feature Scaling**: Demonstrates clear understanding of why feature scaling affects optimization
+- Provides reasonable explanation for why different scales impact convergence
 - Makes connections to practical ML preprocessing requirements
 
 **Good (3-4 points):**
