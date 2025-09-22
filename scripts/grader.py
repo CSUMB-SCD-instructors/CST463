@@ -509,7 +509,6 @@ def grade(**kwargs) -> GradingResult:
             logs=traceback.format_exc()
         )
 
-
 def main():
     flags = parse_flags()
     

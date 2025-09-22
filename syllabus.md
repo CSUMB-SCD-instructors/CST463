@@ -240,3 +240,4 @@ The process for syllabus changes:
 4. Change takes effect after notification period
 
 Students are responsible for staying current with any announced changes to the syllabus.
+
