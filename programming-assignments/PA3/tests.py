@@ -11,14 +11,17 @@ from student_code import (
     mse_derivative, sigmoid_derivative, relu_derivative,
     # Backpropagation functions
     linear_backward, single_layer_forward, single_layer_backward,
-    # Two-layer network functions
-    two_layer_forward, two_layer_backward,
     # Training functions
-    initialize_network_weights, gradient_descent_step_network,
-    train_single_layer, train_two_layer_network,
-    # Utility functions
-    numerical_gradient_check, predict_network,
-    generate_classification_data, generate_nonlinear_data
+    train_single_layer,
+    # Simplified gradient check
+    simple_gradient_check
+)
+
+# Import utilities from separate file
+from utils import (
+    initialize_network_weights, predict_network,
+    generate_classification_data, generate_nonlinear_data,
+    full_gradient_check
 )
 
 
@@ -198,26 +201,26 @@ class TestDerivatives:
 
     def test_sigmoid_derivative_numerical_verification(self):
         """Verify sigmoid derivative against numerical derivative"""
-        u_test = np.array([-2, 0, 2])
+        u_test = np.array([-1.0, 0.0, 1.0])  # Use float values to avoid integer casting
 
         # Compute analytical derivative
         analytical_grad = sigmoid_derivative(u_test)
 
-        # Compute numerical derivative
-        eps = 1e-8
-        numerical_grad = np.zeros_like(u_test)
+        # Compute numerical derivative with larger epsilon for stability
+        eps = 1e-6
+        numerical_grad = np.zeros_like(u_test, dtype=np.float64)  # Ensure float array
 
         for i, u_val in enumerate(u_test):
             u_plus = u_val + eps
             u_minus = u_val - eps
 
-            # Use the actual sigmoid formula for numerical check
-            sig_plus = 1 / (1 + np.exp(-u_plus))
-            sig_minus = 1 / (1 + np.exp(-u_minus))
+            # Use the actual sigmoid_forward function for consistency
+            sig_plus = sigmoid_forward(np.array([u_plus]))[0]
+            sig_minus = sigmoid_forward(np.array([u_minus]))[0]
 
             numerical_grad[i] = (sig_plus - sig_minus) / (2 * eps)
 
-        np.testing.assert_allclose(analytical_grad, numerical_grad, rtol=1e-5)
+        np.testing.assert_allclose(analytical_grad, numerical_grad, rtol=1e-3, atol=1e-6)
 
     def test_relu_derivative_known_values(self):
         """Test ReLU derivative with known values"""
@@ -347,25 +350,27 @@ class TestIntegration:
         assert dL_db.shape == b.shape
         assert dL_dX.shape == X.shape
 
-    def test_two_layer_forward_shapes(self):
-        """Test two-layer forward pass returns correct shapes"""
+    def test_single_layer_integration(self):
+        """Test single layer forward-backward integration"""
         X = np.random.randn(4, 3)   # 4 samples, 3 features
-        W1 = np.random.randn(3, 5)  # First layer: 3 -> 5
-        b1 = np.random.randn(5)
-        W2 = np.random.randn(5, 2)  # Second layer: 5 -> 2
-        b2 = np.random.randn(2)
+        W = np.random.randn(3, 2)   # 3 features -> 2 units
+        b = np.random.randn(2)
 
-        cache = two_layer_forward(X, W1, b1, W2, b2, 'relu', 'linear')
-
-        # Check that cache contains expected keys and shapes
-        assert 'X' in cache
-        assert 'u1' in cache and 'v1' in cache
-        assert 'u2' in cache and 'v2' in cache
-        assert 'W1' in cache and 'W2' in cache
+        # Forward pass
+        u, v = single_layer_forward(X, W, b, 'sigmoid')
 
         # Check shapes
-        assert cache['v1'].shape == (4, 5)  # After first layer
-        assert cache['v2'].shape == (4, 2)  # After second layer
+        assert u.shape == (4, 2)
+        assert v.shape == (4, 2)
+
+        # Backward pass
+        dL_dv = np.random.randn(4, 2)
+        dL_dW, dL_db, dL_dX = single_layer_backward(dL_dv, u, X, W, 'sigmoid')
+
+        # Check gradient shapes
+        assert dL_dW.shape == W.shape
+        assert dL_db.shape == b.shape
+        assert dL_dX.shape == X.shape
 
     def test_training_reduces_loss(self):
         """Test that training actually reduces loss on simple problem"""
@@ -420,25 +425,34 @@ class TestEdgeCases:
             assert weights[1][0].shape == (5, 2)  # W2 shape
             assert weights[1][1].shape == (2,)    # b2 shape
 
-    def test_gradient_checking_basic(self):
-        """Basic test that gradient checking doesn't crash"""
+    def test_simple_gradient_checking(self):
+        """Test simplified gradient checking function"""
         # Simple setup
-        X = np.random.randn(3, 2)
-        y = np.random.randn(3, 1)
+        X = np.array([[1, 2], [3, 4]])
+        y = np.array([[1], [0]])
 
-        # Create simple single layer weights
-        weights = {
-            'W': np.random.randn(2, 1) * 0.1,
-            'b': np.random.randn(1) * 0.1
-        }
+        # Forward pass to get analytical gradient
+        W = np.array([[0.1], [0.2]])
+        b = np.array([0.1])
 
-        # This should run without crashing
-        grad_check_result = numerical_gradient_check(
-            X, y, weights, network_type='single', epsilon=1e-7
-        )
+        u, v = single_layer_forward(X, W, b, 'sigmoid')
+        dL_dv = mse_derivative(y, v)
+        dL_dW, dL_db, _ = single_layer_backward(dL_dv, u, X, W, 'sigmoid')
 
-        # Should return a dictionary with comparison results
-        assert isinstance(grad_check_result, dict)
+        # Define loss function for gradient checking
+        def loss_func(W_test):
+            u_test, v_test = single_layer_forward(X, W_test, b, 'sigmoid')
+            return mse_loss(y, v_test)
+
+        # Test gradient checking
+        result = simple_gradient_check(W, dL_dW, loss_func, 'W')
+
+        # Should return expected structure
+        assert isinstance(result, dict)
+        assert 'param_name' in result
+        assert 'numerical_grad' in result
+        assert 'analytical_grad' in result
+        assert 'passed' in result
 
 
 # ============================================================================

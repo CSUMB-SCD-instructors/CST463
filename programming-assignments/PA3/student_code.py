@@ -3,6 +3,9 @@
 import numpy as np
 from typing import Callable, Tuple, List, Dict, Union
 
+# Numerical stability constant
+EPSILON = 1e-15  # Small constant to prevent numerical instabilities (log(0), division by 0)
+
 
 # ============================================================================
 # FORWARD PASS FUNCTIONS
@@ -28,8 +31,7 @@ def linear_forward(X: np.ndarray, W: np.ndarray, b: np.ndarray) -> np.ndarray:
     np.ndarray, shape (n_samples, n_units)
         Pre-activation values (u in class notation)
     """
-    # TODO: Implement linear transformation
-    pass
+    return X @ W + b
 
 
 def sigmoid_forward(u: np.ndarray) -> np.ndarray:
@@ -44,13 +46,14 @@ def sigmoid_forward(u: np.ndarray) -> np.ndarray:
         Pre-activation values
 
     Returns
+    
     -------
     np.ndarray
         Sigmoid activation outputs (v in class notation)
     """
-    # TODO: Implement sigmoid function
-    # Hint: Use np.clip or other techniques to prevent overflow
-    pass
+    # Clip input to prevent overflow/underflow
+    u_clipped = np.clip(u, -500, 500)
+    return 1 / (1 + np.exp(-u_clipped))
 
 
 def relu_forward(u: np.ndarray) -> np.ndarray:
@@ -69,8 +72,7 @@ def relu_forward(u: np.ndarray) -> np.ndarray:
     np.ndarray
         ReLU activation outputs (v in class notation)
     """
-    # TODO: Implement ReLU function
-    pass
+    return np.maximum(0, u)
 
 
 def softmax_forward(u: np.ndarray) -> np.ndarray:
@@ -89,9 +91,10 @@ def softmax_forward(u: np.ndarray) -> np.ndarray:
     np.ndarray, shape (n_samples, n_classes)
         Softmax probabilities (v in class notation, each row sums to 1)
     """
-    # TODO: Implement softmax function
-    # Hint: Subtract max for numerical stability
-    pass
+    # Subtract max for numerical stability
+    u_stable = u - np.max(u, axis=1, keepdims=True)
+    exp_u = np.exp(u_stable)
+    return exp_u / np.sum(exp_u, axis=1, keepdims=True)
 
 
 # ============================================================================
@@ -114,11 +117,11 @@ def mse_loss(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     float
         MSE loss value
     """
-    # TODO: Implement MSE loss
-    pass
+    errors = y_true - y_pred
+    return np.mean(errors ** 2)
 
 
-def cross_entropy_loss(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+def cross_entropy_loss(y_true: np.ndarray, y_pred: np.ndarray, epsilon: float = EPSILON) -> float:
     """
     Compute cross-entropy loss for classification
 
@@ -128,15 +131,19 @@ def cross_entropy_loss(y_true: np.ndarray, y_pred: np.ndarray) -> float:
         True labels (one-hot encoded)
     y_pred : np.ndarray, shape (n_samples, n_classes)
         Predicted probabilities
+    epsilon : float, optional
+        Small value to prevent log(0). Default uses module constant EPSILON.
 
     Returns
     -------
     float
         Cross-entropy loss value
     """
-    # TODO: Implement cross-entropy loss
-    # Hint: Add small epsilon to prevent log(0)
-    pass
+    # Clip predictions to prevent log(0) which would give -inf
+    y_pred_clipped = np.clip(y_pred, epsilon, 1 - epsilon)
+
+    # Cross-entropy: -sum(y_true * log(y_pred)) averaged over samples
+    return -np.mean(np.sum(y_true * np.log(y_pred_clipped), axis=1))
 
 
 # ============================================================================
@@ -159,8 +166,10 @@ def mse_derivative(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
     np.ndarray
         Gradient of MSE w.r.t. predictions
     """
-    # TODO: Implement MSE derivative
-    pass
+    # MSE = (1/n) * sum((y_pred - y_true)^2)
+    # Derivative: (2/n) * (y_pred - y_true)
+    n_samples = y_true.shape[0]
+    return (2 / n_samples) * (y_pred - y_true)
 
 
 def sigmoid_derivative(u: np.ndarray) -> np.ndarray:
@@ -179,8 +188,10 @@ def sigmoid_derivative(u: np.ndarray) -> np.ndarray:
     np.ndarray
         Sigmoid derivative: σ(u) * (1 - σ(u)) = dv/du
     """
-    # TODO: Implement sigmoid derivative
-    pass
+    # Compute sigmoid first
+    sigmoid_u = sigmoid_forward(u)
+    # Derivative: σ(u) * (1 - σ(u))
+    return sigmoid_u * (1 - sigmoid_u)
 
 
 def relu_derivative(u: np.ndarray) -> np.ndarray:
@@ -199,8 +210,8 @@ def relu_derivative(u: np.ndarray) -> np.ndarray:
     np.ndarray
         ReLU derivative: 1 if u > 0, else 0 = dv/du
     """
-    # TODO: Implement ReLU derivative
-    pass
+    # ReLU derivative: 1 where u > 0, 0 elsewhere
+    return (u > 0).astype(np.float64)
 
 
 # ============================================================================
@@ -229,11 +240,12 @@ def linear_backward(dL_du: np.ndarray, X: np.ndarray, W: np.ndarray) -> Tuple[np
         dL_db: Gradient w.r.t. bias, shape (n_units,)
         dL_dX: Gradient w.r.t. input, shape (n_samples, n_features)
     """
-    # TODO: Implement linear layer backpropagation
-    # Use chain rule: dL_dW = X.T @ dL_du
-    #                dL_db = sum over samples of dL_du
-    #                dL_dX = dL_du @ W.T
-    pass
+    # Apply chain rule for linear transformation u = X @ W + b
+    dL_dW = X.T @ dL_du
+    dL_db = np.sum(dL_du, axis=0)  # Sum over samples
+    dL_dX = dL_du @ W.T
+
+    return dL_dW, dL_db, dL_dX
 
 
 def single_layer_forward(X: np.ndarray, W: np.ndarray, b: np.ndarray, activation: str) -> Tuple[np.ndarray, np.ndarray]:
@@ -259,11 +271,23 @@ def single_layer_forward(X: np.ndarray, W: np.ndarray, b: np.ndarray, activation
         u: Pre-activation values, shape (n_samples, n_units)
         v: Post-activation values, shape (n_samples, n_units)
     """
-    # TODO: Implement single layer forward pass
     # 1. Compute linear transformation (get u)
+    u = linear_forward(X, W, b)
+
     # 2. Apply activation function (get v)
+    if activation == 'linear':
+        v = u  # Linear activation is just identity
+    elif activation == 'sigmoid':
+        v = sigmoid_forward(u)
+    elif activation == 'relu':
+        v = relu_forward(u)
+    elif activation == 'softmax':
+        v = softmax_forward(u)
+    else:
+        raise ValueError(f"Unknown activation function: {activation}")
+
     # 3. Return both u and v for backprop
-    pass
+    return u, v
 
 
 def single_layer_backward(dL_dv: np.ndarray, u: np.ndarray, X: np.ndarray, W: np.ndarray,
@@ -293,127 +317,37 @@ def single_layer_backward(dL_dv: np.ndarray, u: np.ndarray, X: np.ndarray, W: np
         dL_db: Gradient w.r.t. bias
         dL_dX: Gradient w.r.t. input
     """
-    # TODO: Implement single layer backward pass
     # 1. Compute dL_du = dL_dv * activation_derivative(u)
+    if activation == 'linear':
+        dL_du = dL_dv  # Linear derivative is 1
+    elif activation == 'sigmoid':
+        dL_du = dL_dv * sigmoid_derivative(u)
+    elif activation == 'relu':
+        dL_du = dL_dv * relu_derivative(u)
+    elif activation == 'softmax':
+        # For softmax, assume cross-entropy loss is used
+        # Combined softmax + cross-entropy derivative simplifies to: y_pred - y_true
+        # Here we assume dL_dv already incorporates this simplification
+        dL_du = dL_dv
+    else:
+        raise ValueError(f"Unknown activation function: {activation}")
+
     # 2. Use linear_backward to get gradients w.r.t. W, b, X
-    pass
+    dL_dW, dL_db, dL_dX = linear_backward(dL_du, X, W)
+
+    return dL_dW, dL_db, dL_dX
 
 
 # ============================================================================
-# TWO-LAYER NETWORK FUNCTIONS
+# TRAINING FUNCTIONS (SIMPLIFIED)
 # ============================================================================
-
-def two_layer_forward(X: np.ndarray, W1: np.ndarray, b1: np.ndarray, W2: np.ndarray, b2: np.ndarray,
-                     hidden_activation: str = 'relu', output_activation: str = 'linear') -> Dict:
-    """
-    Forward pass through two-layer network
-
-    Following class notation: X → u1 → v1 → u2 → v2
-
-    Parameters
-    ----------
-    X : np.ndarray, shape (n_samples, n_features)
-        Input data
-    W1, b1 : np.ndarray
-        First layer weights and bias
-    W2, b2 : np.ndarray
-        Second layer weights and bias
-    hidden_activation : str
-        Activation for hidden layer
-    output_activation : str
-        Activation for output layer
-
-    Returns
-    -------
-    Dict
-        Forward pass cache containing all intermediate values needed for backprop
-        Keys: X, u1, v1, u2, v2, W1, W2 (following class notation)
-    """
-    # TODO: Implement two-layer forward pass
-    # 1. Forward through first layer: X → u1 → v1
-    # 2. Forward through second layer: v1 → u2 → v2
-    # 3. Return dict with all intermediate values: X, u1, v1, u2, v2, W1, W2
-    pass
-
-
-def two_layer_backward(forward_cache: Dict, y_true: np.ndarray, loss_type: str = 'mse') -> Dict:
-    """
-    Backward pass through two-layer network
-
-    Parameters
-    ----------
-    forward_cache : Dict
-        Cache from forward pass containing intermediate values
-    y_true : np.ndarray
-        True target values
-    loss_type : str
-        Type of loss function ('mse' or 'cross_entropy')
-
-    Returns
-    -------
-    Dict
-        Dictionary containing all gradients: dW1, db1, dW2, db2
-    """
-    # TODO: Implement two-layer backward pass
-    # 1. Compute loss derivative w.r.t. output
-    # 2. Backward through second layer
-    # 3. Backward through first layer
-    # 4. Return all gradients
-    pass
-
-
-# ============================================================================
-# TRAINING & OPTIMIZATION
-# ============================================================================
-
-def initialize_network_weights(layer_sizes: List[int], method: str = 'xavier') -> List[Tuple[np.ndarray, np.ndarray]]:
-    """
-    Initialize weights and biases for multi-layer network
-
-    Parameters
-    ----------
-    layer_sizes : List[int]
-        List of layer sizes [input_size, hidden_size, ..., output_size]
-    method : str
-        Initialization method ('zeros', 'random', 'xavier', 'he')
-
-    Returns
-    -------
-    List[Tuple[np.ndarray, np.ndarray]]
-        List of (W, b) tuples for each layer
-    """
-    # TODO: Implement weight initialization
-    # Support different initialization strategies
-    pass
-
-
-def gradient_descent_step_network(gradients: Dict, weights: Dict, learning_rate: float) -> Dict:
-    """
-    Update network weights using computed gradients
-
-    Parameters
-    ----------
-    gradients : Dict
-        Dictionary containing gradients for all parameters
-    weights : Dict
-        Current network weights
-    learning_rate : float
-        Learning rate for gradient descent
-
-    Returns
-    -------
-    Dict
-        Updated network weights
-    """
-    # TODO: Implement gradient descent weight update
-    # weights = weights - learning_rate * gradients
-    pass
-
 
 def train_single_layer(X: np.ndarray, y: np.ndarray, activation: str = 'sigmoid',
                       loss_type: str = 'mse', epochs: int = 100, learning_rate: float = 0.01) -> Tuple[Dict, List[float]]:
     """
     Train single layer network (logistic/linear regression)
+
+    Uses utility functions for weight initialization
 
     Parameters
     ----------
@@ -435,138 +369,118 @@ def train_single_layer(X: np.ndarray, y: np.ndarray, activation: str = 'sigmoid'
     Tuple[Dict, List[float]]
         Trained weights and loss history
     """
-    # TODO: Implement single layer training loop
-    pass
+    # Import utility function
+    from utils import initialize_network_weights
 
+    # Initialize weights
+    n_features = X.shape[1]
+    n_outputs = y.shape[1] if len(y.shape) > 1 else 1
 
-def train_two_layer_network(X: np.ndarray, y: np.ndarray, hidden_size: int, epochs: int = 100,
-                           learning_rate: float = 0.01) -> Tuple[Dict, List[float]]:
-    """
-    Train two-layer neural network
+    layer_weights = initialize_network_weights([n_features, n_outputs], method='small_random', seed=42)
+    W, b = layer_weights[0]
 
-    Parameters
-    ----------
-    X : np.ndarray, shape (n_samples, n_features)
-        Training data
-    y : np.ndarray
-        Target values
-    hidden_size : int
-        Number of hidden units
-    epochs : int
-        Number of training epochs
-    learning_rate : float
-        Learning rate
+    # Flatten y if needed for consistency
+    if len(y.shape) == 1:
+        y = y.reshape(-1, 1)
 
-    Returns
-    -------
-    Tuple[Dict, List[float]]
-        Trained network weights and loss history
-    """
-    # TODO: Implement two-layer network training loop
-    pass
+    loss_history = []
+
+    for epoch in range(epochs):
+        # Forward pass
+        u, v = single_layer_forward(X, W, b, activation)
+
+        # Compute loss
+        if loss_type == 'mse':
+            loss = mse_loss(y, v)
+            # Compute loss derivative
+            dL_dv = mse_derivative(y, v)
+        elif loss_type == 'cross_entropy':
+            loss = cross_entropy_loss(y, v)
+            # For cross-entropy + softmax, derivative simplifies
+            dL_dv = v - y
+        else:
+            raise ValueError(f"Unknown loss type: {loss_type}")
+
+        loss_history.append(loss)
+
+        # Backward pass
+        dL_dW, dL_db, dL_dX = single_layer_backward(dL_dv, u, X, W, activation)
+
+        # Update weights
+        W = W - learning_rate * dL_dW
+        b = b - learning_rate * dL_db
+
+    # Return weights in dictionary format
+    weights = {'W': W, 'b': b}
+    return weights, loss_history
 
 
 # ============================================================================
-# UTILITY & VERIFICATION FUNCTIONS
+# SIMPLIFIED GRADIENT CHECKING
 # ============================================================================
 
-def numerical_gradient_check(X: np.ndarray, y: np.ndarray, weights: Dict, network_type: str = 'single',
-                            epsilon: float = 1e-7) -> Dict:
+def simple_gradient_check(param: np.ndarray, analytical_grad: np.ndarray,
+                         loss_func: Callable, param_name: str,
+                         epsilon: float = 1e-7) -> Dict:
     """
-    Verify analytical gradients using numerical gradients
+    Simple gradient checking for a single parameter
+
+    This is the simplified version students implement to understand the concept.
 
     Parameters
     ----------
-    X : np.ndarray
-        Input data
-    y : np.ndarray
-        Target values
-    weights : Dict
-        Current network weights
-    network_type : str
-        Type of network ('single' or 'two_layer')
+    param : np.ndarray
+        Parameter to check (e.g., a weight matrix)
+    analytical_grad : np.ndarray
+        Analytical gradient computed by backprop
+    loss_func : Callable
+        Function that computes loss given perturbed parameter
+        Should have signature: loss_func(perturbed_param) -> float
+    param_name : str
+        Name of parameter for reporting
     epsilon : float
         Small perturbation for numerical gradient
 
     Returns
     -------
     Dict
-        Comparison between analytical and numerical gradients
+        Results of gradient check
     """
-    # TODO: Implement gradient checking
-    # Use finite differences to compute numerical gradients
-    # Compare with analytical gradients from backprop
-    pass
+    # 1. Choose first element for simplicity (students can modify this)
+    i, j = 0, 0
 
+    # 2. Compute numerical gradient using finite differences
+    # Create copy of parameter
+    param_plus = param.copy()
+    param_minus = param.copy()
 
-def predict_network(X: np.ndarray, weights: Dict, network_type: str = 'single') -> np.ndarray:
-    """
-    Make predictions with trained network
+    # Perturb the element
+    param_plus[i, j] += epsilon
+    param_minus[i, j] -= epsilon
 
-    Parameters
-    ----------
-    X : np.ndarray
-        Input data
-    weights : Dict
-        Trained network weights
-    network_type : str
-        Type of network
+    # Compute losses
+    loss_plus = loss_func(param_plus)
+    loss_minus = loss_func(param_minus)
 
-    Returns
-    -------
-    np.ndarray
-        Network predictions
-    """
-    # TODO: Implement prediction function
-    pass
+    # Numerical gradient
+    numerical_grad = (loss_plus - loss_minus) / (2 * epsilon)
 
+    # 3. Compare with analytical gradient at the same position
+    analytical_value = analytical_grad[i, j]
 
-def generate_classification_data(n_samples: int, n_features: int = 2, n_classes: int = 2,
-                               seed: int = 42) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Generate synthetic classification dataset
+    # 4. Return results
+    diff = abs(numerical_grad - analytical_value)
+    rel_error = diff / (abs(numerical_grad) + 1e-8)
 
-    Parameters
-    ----------
-    n_samples : int
-        Number of samples
-    n_features : int
-        Number of input features
-    n_classes : int
-        Number of classes
-    seed : int
-        Random seed
-
-    Returns
-    -------
-    Tuple[np.ndarray, np.ndarray]
-        Features and one-hot encoded labels
-    """
-    # TODO: Generate synthetic classification data
-    # Create data that requires nonlinear decision boundary for 2-layer vs 1-layer comparison
-    pass
-
-
-def generate_nonlinear_data(n_samples: int = 200, noise: float = 0.1, seed: int = 42) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Generate synthetic data requiring nonlinear decision boundary
-
-    Parameters
-    ----------
-    n_samples : int
-        Number of samples
-    noise : float
-        Noise level
-    seed : int
-        Random seed
-
-    Returns
-    -------
-    Tuple[np.ndarray, np.ndarray]
-        Features and binary labels
-    """
-    # TODO: Generate nonlinear data (e.g., XOR-like, circles, spirals)
-    pass
+    return {
+        'param_name': param_name,
+        'position': (i, j),
+        'numerical_grad': numerical_grad,
+        'analytical_grad': analytical_value,
+        'difference': diff,
+        'relative_error': rel_error,
+        'passed': rel_error < 1e-5
+    }
 
 
 if __name__ == "__main__":
@@ -574,26 +488,22 @@ if __name__ == "__main__":
     print("Run 'pytest tests.py -v' to test your implementations")
 
     # Quick demo when students have implemented functions
-    print("\n=== Quick Demo (implement functions first!) ===")
+    print("\n=== Quick Demo ===")
     try:
         # Generate sample data
-        X, y = generate_nonlinear_data(100, noise=0.1, seed=42)
+        from utils import generate_nonlinear_data
+        X, y = generate_nonlinear_data(50, noise=0.1, seed=42)
 
-        # Train single layer (should struggle with nonlinear data)
+        # Train single layer
         print("Training single layer network...")
-        single_weights, single_costs = train_single_layer(X, y, epochs=100, learning_rate=0.1)
+        weights, costs = train_single_layer(
+            X, y.reshape(-1, 1), activation='sigmoid', epochs=50, learning_rate=0.1
+        )
 
-        # Train two layer (should handle nonlinear data better)
-        print("Training two-layer network...")
-        two_layer_weights, two_layer_costs = train_two_layer_network(X, y, hidden_size=10, epochs=100, learning_rate=0.1)
-
-        print(f"Single layer final cost: {single_costs[-1]:.4f}")
-        print(f"Two-layer final cost: {two_layer_costs[-1]:.4f}")
-
-        # Gradient checking
-        print("Running gradient check...")
-        grad_check = numerical_gradient_check(X[:10], y[:10], two_layer_weights, 'two_layer')
-        print("Gradient check completed!")
+        print(f"Final cost: {costs[-1]:.4f}")
+        print("Demo completed successfully!")
 
     except Exception as e:
         print(f"Demo requires function implementations: {e}")
+        import traceback
+        traceback.print_exc()
