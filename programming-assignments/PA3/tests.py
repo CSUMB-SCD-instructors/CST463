@@ -411,19 +411,6 @@ class TestEdgeCases:
         v = sigmoid_forward(u)
         assert v.shape == (1, 1)
 
-    def test_zero_initialization(self):
-        """Test weight initialization methods"""
-        layer_sizes = [3, 5, 2]  # 3 -> 5 -> 2
-
-        # Test different initialization methods
-        for method in ['zeros', 'random', 'xavier', 'he']:
-            weights = initialize_network_weights(layer_sizes, method=method)
-
-            assert len(weights) == 2  # Should have 2 layers of weights
-            assert weights[0][0].shape == (3, 5)  # W1 shape
-            assert weights[0][1].shape == (5,)    # b1 shape
-            assert weights[1][0].shape == (5, 2)  # W2 shape
-            assert weights[1][1].shape == (2,)    # b2 shape
 
     def test_simple_gradient_checking(self):
         """Test simplified gradient checking function"""
@@ -455,47 +442,6 @@ class TestEdgeCases:
         assert 'passed' in result
 
 
-# ============================================================================
-# UTILITY FUNCTION TESTS
-# ============================================================================
-
-class TestUtilities:
-    """Test utility and data generation functions"""
-
-    def test_generate_classification_data(self):
-        """Test synthetic classification data generation"""
-        X, y = generate_classification_data(100, n_features=2, n_classes=2, seed=42)
-
-        assert X.shape == (100, 2)
-        assert y.shape[0] == 100
-
-        # Should be one-hot encoded for n_classes > 2
-        if y.shape[1] == 2:  # Binary classification
-            assert np.all(np.sum(y, axis=1) == 1)  # Each row sums to 1
-
-    def test_generate_nonlinear_data(self):
-        """Test nonlinear data generation"""
-        X, y = generate_nonlinear_data(50, noise=0.1, seed=42)
-
-        assert X.shape[0] == 50
-        assert len(y) == 50
-
-        # Should have both classes represented
-        unique_classes = np.unique(y)
-        assert len(unique_classes) <= 2  # Binary classification
-
-    def test_predict_network_basic(self):
-        """Basic test of network prediction function"""
-        X = np.random.randn(5, 3)
-
-        # Simple single layer weights
-        weights = {
-            'W': np.random.randn(3, 1),
-            'b': np.random.randn(1)
-        }
-
-        predictions = predict_network(X, weights, network_type='single')
-        assert predictions.shape[0] == 5  # Should predict for all samples
 
 
 if __name__ == "__main__":

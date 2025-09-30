@@ -1,0 +1,96 @@
+# PA3 Scoring Configuration - Backpropagation & Neural Networks
+# Total: 100 points for technical implementation (Part 1)
+# Part 2 (visualization/analysis) graded separately
+# Emphasis: 60% on foundational building blocks, 40% on integration
+
+# Default points for any test not specifically mentioned
+default_points: 1
+
+# Individual test scoring - emphasizes building blocks (60%) over integration (40%)
+test_scores:
+  # FOUNDATIONAL BUILDING BLOCKS (60 points total)
+
+  # Forward pass functions - core understanding (25 points)
+  test_linear_forward_simple: 4
+  test_linear_forward_batch: 4
+  test_sigmoid_forward_known_values: 3
+  test_sigmoid_forward_stability: 3
+  test_relu_forward_basic: 2
+  test_relu_forward_batch: 2
+  test_softmax_forward_simple: 3
+  test_softmax_forward_batch: 3
+
+  # Loss functions - mathematical foundation (15 points)
+  test_mse_loss_perfect_predictions: 3
+  test_mse_loss_known_values: 3
+  test_cross_entropy_loss_perfect_predictions: 3
+  test_cross_entropy_loss_known_values: 3
+  test_mse_derivative_known_values: 3
+
+  # Activation derivatives - chain rule foundation (20 points)
+  test_sigmoid_derivative_known_values: 6
+  test_sigmoid_derivative_numerical_verification: 6
+  test_relu_derivative_known_values: 4
+  test_derivatives_shape_consistency: 3
+
+  # INTEGRATION AND APPLICATION (40 points total)
+
+  # Backpropagation core - critical understanding (20 points)
+  test_linear_backward_known_gradients: 12
+  test_single_layer_forward_linear: 4
+  test_single_layer_forward_sigmoid: 4
+
+  # System integration - working together (20 points)
+  test_gradient_shapes_consistency: 4
+  test_forward_backward_consistency: 4
+  test_single_layer_integration: 4
+  test_training_reduces_loss: 4
+  test_simple_gradient_checking: 4
+
+  # Edge case tests (ensuring robustness of student implementations)
+  test_single_sample_batch: 2
+
+# Grading breakdown
+grading:
+  total_points: 100
+  categories:
+    foundational_forward: 25    # Forward pass functions
+    foundational_loss: 15       # Loss functions and basic derivatives
+    foundational_derivatives: 20 # Activation derivatives (key to backprop)
+    backprop_core: 20          # Linear backward and single layer functions
+    integration: 20            # Training and gradient checking
+
+  # Minimum thresholds
+  pass_threshold: 70
+  partial_credit: true
+
+  # Special considerations
+  numerical_stability:
+    description: "Bonus for robust numerical handling"
+    max_bonus: 5
+
+  chain_rule_mastery:
+    description: "Bonus for demonstrating deep backprop understanding"
+    max_bonus: 3
+
+# Test execution
+testing:
+  framework: pytest
+  timeout: 300  # 5 minutes max
+  test_file: "tests.py"
+
+  # Test category priorities
+  test_priorities:
+    mathematical_correctness: 0.5  # Core formulas must be right
+    shape_consistency: 0.2         # Proper tensor dimensions
+    integration: 0.2               # Components work together
+    edge_cases: 0.1               # Robustness
+
+# Assignment-specific notes
+notes:
+  - "Building blocks (forward pass, derivatives) weighted most heavily (60%)"
+  - "Backpropagation understanding critical - linear_backward and derivatives emphasized"
+  - "Integration tests verify end-to-end functionality"
+  - "Numerical stability important for reliable training"
+  - "Chain rule application is the core learning objective"
+  - "Single layer focus keeps complexity manageable during exam period"
