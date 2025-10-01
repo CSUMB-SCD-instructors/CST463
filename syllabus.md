@@ -1,5 +1,6 @@
 # CST463 (Advanced Machine Learning) Syllabus
 
+
 ## Summary
 
 In this course you will learn to use advanced machine learning methods, including dimensionality reduction, ensemble methods, neural nets, and methods for working with time series data.
