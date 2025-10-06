@@ -1,4 +1,20 @@
 #!/usr/bin/env python3
+"""
+PA3: Backpropagation & Neural Networks
+
+This assignment implements backpropagation and neural network fundamentals from scratch.
+
+Key functions to implement:
+- Forward pass: linear_forward, sigmoid_forward, relu_forward, softmax_forward
+- Loss functions: mse_loss, cross_entropy_loss
+- Loss derivatives: mse_derivative
+- Activation derivatives: sigmoid_derivative, relu_derivative
+- Backpropagation: linear_backward (core chain rule), single_layer_backward
+- Integration: single_layer_forward, train_single_layer
+- Validation: simple_gradient_check (numerical gradient verification)
+
+This builds the foundation for deep learning by implementing every component manually.
+"""
 
 import numpy as np
 from typing import Callable, Tuple, List, Dict, Union
@@ -31,7 +47,8 @@ def linear_forward(X: np.ndarray, W: np.ndarray, b: np.ndarray) -> np.ndarray:
     np.ndarray, shape (n_samples, n_units)
         Pre-activation values (u in class notation)
     """
-    return X @ W + b
+    # TODO: Implement linear forward pass
+    pass
 
 
 def sigmoid_forward(u: np.ndarray) -> np.ndarray:
@@ -46,14 +63,15 @@ def sigmoid_forward(u: np.ndarray) -> np.ndarray:
         Pre-activation values
 
     Returns
-    
+
     -------
     np.ndarray
         Sigmoid activation outputs (v in class notation)
     """
-    # Clip input to prevent overflow/underflow
-    u_clipped = np.clip(u, -500, 500)
-    return 1 / (1 + np.exp(-u_clipped))
+    # TODO: Implement sigmoid activation function
+    # Hint: For numerical stability, clip u to range [-500, 500] using np.clip()
+    # Hint: This prevents overflow/underflow for extreme values
+    pass
 
 
 def relu_forward(u: np.ndarray) -> np.ndarray:
@@ -72,7 +90,8 @@ def relu_forward(u: np.ndarray) -> np.ndarray:
     np.ndarray
         ReLU activation outputs (v in class notation)
     """
-    return np.maximum(0, u)
+    # TODO: Implement ReLU activation
+    pass
 
 
 def softmax_forward(u: np.ndarray) -> np.ndarray:
@@ -91,10 +110,10 @@ def softmax_forward(u: np.ndarray) -> np.ndarray:
     np.ndarray, shape (n_samples, n_classes)
         Softmax probabilities (v in class notation, each row sums to 1)
     """
-    # Subtract max for numerical stability
-    u_stable = u - np.max(u, axis=1, keepdims=True)
-    exp_u = np.exp(u_stable)
-    return exp_u / np.sum(exp_u, axis=1, keepdims=True)
+    # TODO: Implement softmax activation
+    # Hint: For numerical stability, subtract max from u first: u_stable = u - max(u)
+    # Hint: Result should have each row sum to 1 (probability distribution)
+    pass
 
 
 # ============================================================================
@@ -117,8 +136,8 @@ def mse_loss(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     float
         MSE loss value
     """
-    errors = y_true - y_pred
-    return np.mean(errors ** 2)
+    # TODO: Implement Mean Squared Error loss
+    pass
 
 
 def cross_entropy_loss(y_true: np.ndarray, y_pred: np.ndarray, epsilon: float = EPSILON) -> float:
@@ -139,11 +158,9 @@ def cross_entropy_loss(y_true: np.ndarray, y_pred: np.ndarray, epsilon: float = 
     float
         Cross-entropy loss value
     """
-    # Clip predictions to prevent log(0) which would give -inf
-    y_pred_clipped = np.clip(y_pred, epsilon, 1 - epsilon)
-
-    # Cross-entropy: -sum(y_true * log(y_pred)) averaged over samples
-    return -np.mean(np.sum(y_true * np.log(y_pred_clipped), axis=1))
+    # TODO: Implement cross-entropy loss
+    # Hint: Clip y_pred to avoid log(0): np.clip(y_pred, epsilon, 1 - epsilon)
+    pass
 
 
 # ============================================================================
@@ -166,10 +183,12 @@ def mse_derivative(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
     np.ndarray
         Gradient of MSE w.r.t. predictions
     """
-    # MSE = (1/n) * sum((y_pred - y_true)^2)
-    # Derivative: (2/n) * (y_pred - y_true)
-    n_samples = y_true.shape[0]
-    return (2 / n_samples) * (y_pred - y_true)
+    # TODO: Compute the derivative of MSE with respect to predictions
+    # Hint: MSE = (1/n) * sum((y_pred - y_true)^2)
+    # Hint: Use calculus chain rule to find d(MSE)/d(y_pred)
+    # Hint: The derivative of (y_pred - y_true)^2 w.r.t. y_pred is 2*(y_pred - y_true)
+    # Hint: Don't forget to divide by the number of samples
+    pass
 
 
 def sigmoid_derivative(u: np.ndarray) -> np.ndarray:
@@ -188,10 +207,9 @@ def sigmoid_derivative(u: np.ndarray) -> np.ndarray:
     np.ndarray
         Sigmoid derivative: σ(u) * (1 - σ(u)) = dv/du
     """
-    # Compute sigmoid first
-    sigmoid_u = sigmoid_forward(u)
-    # Derivative: σ(u) * (1 - σ(u))
-    return sigmoid_u * (1 - sigmoid_u)
+    # TODO: Compute the derivative of the sigmoid function
+    # Hint: Remember, the derivative of σ(u) = 1/(1+e^(-u)) is σ(u) * (1 - σ(u))
+    pass
 
 
 def relu_derivative(u: np.ndarray) -> np.ndarray:
@@ -210,8 +228,11 @@ def relu_derivative(u: np.ndarray) -> np.ndarray:
     np.ndarray
         ReLU derivative: 1 if u > 0, else 0 = dv/du
     """
-    # ReLU derivative: 1 where u > 0, 0 elsewhere
-    return (u > 0).astype(np.float64)
+    # TODO: Compute the derivative of ReLU
+    # Hint: ReLU(u) = max(0, u), so the derivative is 1 where u > 0, and 0 elsewhere
+    # Hint: You can use boolean indexing or comparison operators
+    # Hint: Convert boolean result to float64 for compatibility
+    pass
 
 
 # ============================================================================
@@ -240,12 +261,10 @@ def linear_backward(dL_du: np.ndarray, X: np.ndarray, W: np.ndarray) -> Tuple[np
         dL_db: Gradient w.r.t. bias, shape (n_units,)
         dL_dX: Gradient w.r.t. input, shape (n_samples, n_features)
     """
-    # Apply chain rule for linear transformation u = X @ W + b
-    dL_dW = X.T @ dL_du
-    dL_db = np.sum(dL_du, axis=0)  # Sum over samples
-    dL_dX = dL_du @ W.T
-
-    return dL_dW, dL_db, dL_dX
+    # TODO: Implement backpropagation through linear layer u = X @ W + b
+    # Hint: Use the chain rule to compute gradients
+    # Hint: Review the class notes on backprop through linear layers
+    pass
 
 
 def single_layer_forward(X: np.ndarray, W: np.ndarray, b: np.ndarray, activation: str) -> Tuple[np.ndarray, np.ndarray]:
@@ -271,23 +290,8 @@ def single_layer_forward(X: np.ndarray, W: np.ndarray, b: np.ndarray, activation
         u: Pre-activation values, shape (n_samples, n_units)
         v: Post-activation values, shape (n_samples, n_units)
     """
-    # 1. Compute linear transformation (get u)
-    u = linear_forward(X, W, b)
-
-    # 2. Apply activation function (get v)
-    if activation == 'linear':
-        v = u  # Linear activation is just identity
-    elif activation == 'sigmoid':
-        v = sigmoid_forward(u)
-    elif activation == 'relu':
-        v = relu_forward(u)
-    elif activation == 'softmax':
-        v = softmax_forward(u)
-    else:
-        raise ValueError(f"Unknown activation function: {activation}")
-
-    # 3. Return both u and v for backprop
-    return u, v
+    # TODO: Implement single layer forward pass
+    pass
 
 
 def single_layer_backward(dL_dv: np.ndarray, u: np.ndarray, X: np.ndarray, W: np.ndarray,
@@ -317,25 +321,8 @@ def single_layer_backward(dL_dv: np.ndarray, u: np.ndarray, X: np.ndarray, W: np
         dL_db: Gradient w.r.t. bias
         dL_dX: Gradient w.r.t. input
     """
-    # 1. Compute dL_du = dL_dv * activation_derivative(u)
-    if activation == 'linear':
-        dL_du = dL_dv  # Linear derivative is 1
-    elif activation == 'sigmoid':
-        dL_du = dL_dv * sigmoid_derivative(u)
-    elif activation == 'relu':
-        dL_du = dL_dv * relu_derivative(u)
-    elif activation == 'softmax':
-        # For softmax, assume cross-entropy loss is used
-        # Combined softmax + cross-entropy derivative simplifies to: y_pred - y_true
-        # Here we assume dL_dv already incorporates this simplification
-        dL_du = dL_dv
-    else:
-        raise ValueError(f"Unknown activation function: {activation}")
-
-    # 2. Use linear_backward to get gradients w.r.t. W, b, X
-    dL_dW, dL_db, dL_dX = linear_backward(dL_du, X, W)
-
-    return dL_dW, dL_db, dL_dX
+    # TODO: Implement backward pass through activation + linear layer
+    pass
 
 
 # ============================================================================
@@ -369,50 +356,15 @@ def train_single_layer(X: np.ndarray, y: np.ndarray, activation: str = 'sigmoid'
     Tuple[Dict, List[float]]
         Trained weights and loss history
     """
-    # Import utility function
-    from utils import initialize_network_weights
+    # TODO: Implement training loop for single layer network
+    # Step 1: Import and initialize weights
 
-    # Initialize weights
-    n_features = X.shape[1]
-    n_outputs = y.shape[1] if len(y.shape) > 1 else 1
+    # Step 2: Reshape y if needed
 
-    layer_weights = initialize_network_weights([n_features, n_outputs], method='small_random', seed=42)
-    W, b = layer_weights[0]
+    # Step 3: Training loop
 
-    # Flatten y if needed for consistency
-    if len(y.shape) == 1:
-        y = y.reshape(-1, 1)
-
-    loss_history = []
-
-    for epoch in range(epochs):
-        # Forward pass
-        u, v = single_layer_forward(X, W, b, activation)
-
-        # Compute loss
-        if loss_type == 'mse':
-            loss = mse_loss(y, v)
-            # Compute loss derivative
-            dL_dv = mse_derivative(y, v)
-        elif loss_type == 'cross_entropy':
-            loss = cross_entropy_loss(y, v)
-            # For cross-entropy + softmax, derivative simplifies
-            dL_dv = v - y
-        else:
-            raise ValueError(f"Unknown loss type: {loss_type}")
-
-        loss_history.append(loss)
-
-        # Backward pass
-        dL_dW, dL_db, dL_dX = single_layer_backward(dL_dv, u, X, W, activation)
-
-        # Update weights
-        W = W - learning_rate * dL_dW
-        b = b - learning_rate * dL_db
-
-    # Return weights in dictionary format
-    weights = {'W': W, 'b': b}
-    return weights, loss_history
+    # Step 4: Return results
+    pass
 
 
 # ============================================================================
@@ -446,41 +398,17 @@ def simple_gradient_check(param: np.ndarray, analytical_grad: np.ndarray,
     Dict
         Results of gradient check
     """
-    # 1. Choose first element for simplicity (students can modify this)
+    # TODO: Implement gradient checking using finite differences
+    # Step 1: Choose an element to check (start with [0, 0] for simplicity)
     i, j = 0, 0
 
-    # 2. Compute numerical gradient using finite differences
-    # Create copy of parameter
-    param_plus = param.copy()
-    param_minus = param.copy()
+    # Step 2: Compute numerical gradient using finite differences
 
-    # Perturb the element
-    param_plus[i, j] += epsilon
-    param_minus[i, j] -= epsilon
+    # Step 3: Compare with analytical gradient
 
-    # Compute losses
-    loss_plus = loss_func(param_plus)
-    loss_minus = loss_func(param_minus)
+    # Step 4: Return dictionary with results
 
-    # Numerical gradient
-    numerical_grad = (loss_plus - loss_minus) / (2 * epsilon)
-
-    # 3. Compare with analytical gradient at the same position
-    analytical_value = analytical_grad[i, j]
-
-    # 4. Return results
-    diff = abs(numerical_grad - analytical_value)
-    rel_error = diff / (abs(numerical_grad) + 1e-8)
-
-    return {
-        'param_name': param_name,
-        'position': (i, j),
-        'numerical_grad': numerical_grad,
-        'analytical_grad': analytical_value,
-        'difference': diff,
-        'relative_error': rel_error,
-        'passed': rel_error < 1e-5
-    }
+    pass
 
 
 if __name__ == "__main__":
