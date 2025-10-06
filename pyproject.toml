@@ -3,12 +3,17 @@ name = "cst463-golden"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.11"
 dependencies = [
+    "jupyter>=1.1.1",
     "matplotlib>=3.10.5",
+    "matplotlib-inline>=0.1.7",
     "numpy>=2.3.2",
     "pandas>=2.3.2",
     "pytest>=8.4.1",
     "pyyaml>=6.0.2",
     "scikit-learn>=1.7.1",
+    "tensorflow>=2.20.0",
+    "torch>=2.8.0",
+    "torchvision>=0.23.0",
 ]
