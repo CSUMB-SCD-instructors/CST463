@@ -48,13 +48,13 @@ coverage/
 
 # Course-specific (you may want to ignore)
 # grades/
-<<<<<<< HEAD
 # solutions/
 /lectures/pca_walkthrough.aux
 /lectures/pca_walkthrough.nav
 /lectures/pdfs/pca_walkthrough.pdf
 /lectures/pca_walkthrough.snm
 /lectures/pca_walkthrough.toc
-=======
-# solutions/
->>>>>>> template
+solutions/
+
+
+.ipynb_checkpoints
