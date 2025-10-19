@@ -1,0 +1,111 @@
+# PA4 Scoring Configuration - CNNs & Training Dynamics
+# Total: 100 points for technical implementation (Part 1)
+# Part 2 (visualization/analysis) graded separately
+# Emphasis: 35% model building, 30% callbacks, 25% training/search, 10% integration
+
+# Default points for any test not specifically mentioned
+default_points: 1
+
+# Individual test scoring
+test_scores:
+  # MODEL BUILDING TESTS (35 points total)
+
+  # Sequential CNN architecture (15 points)
+  test_sequential_model_returns_keras_model: 2
+  test_sequential_model_input_shape: 3
+  test_sequential_model_output_shape: 3
+  test_sequential_model_has_conv_layers: 3
+  test_sequential_model_has_pooling: 2
+  test_sequential_model_has_dense_layers: 2
+
+  # Functional CNN with inception module (20 points)
+  test_functional_model_returns_keras_model: 2
+  test_functional_model_input_shape: 4
+  test_functional_model_has_concatenate: 8  # Key feature - inception module
+  test_functional_model_parameter_count: 3
+  test_models_different_architectures: 3
+
+  # CUSTOM CALLBACK TESTS (30 points total)
+
+  # Early stopping implementation (15 points)
+  test_early_stopping_inherits_callback: 2
+  test_early_stopping_attributes: 3
+  test_early_stopping_stops_training: 10  # Core functionality
+
+  # Learning rate scheduler implementation (15 points)
+  test_lr_scheduler_inherits_callback: 2
+  test_lr_scheduler_attributes: 3
+  test_lr_scheduler_changes_lr: 10  # Core functionality
+
+  # OPTIMIZER MANAGEMENT (10 points total)
+  test_get_optimizer_sgd: 2
+  test_get_optimizer_adam: 2
+  test_get_optimizer_rmsprop: 2
+  test_get_optimizer_invalid_name: 2
+  test_get_optimizer_case_insensitive: 2
+
+  # TRAINING FUNCTIONS (15 points total)
+  test_train_model_returns_history: 3
+  test_train_model_reduces_loss: 5
+  test_train_model_has_metrics: 3
+  test_train_model_with_callbacks: 4
+
+  # GRID SEARCH (10 points total)
+  test_grid_search_returns_list: 2
+  test_grid_search_result_structure: 4
+  test_grid_search_multiple_optimizers: 4
+
+  # INTEGRATION TESTS (10 points total)
+  test_full_training_pipeline_sequential: 3
+  test_full_training_pipeline_functional: 4
+  test_training_with_all_callbacks: 3
+
+# Grading breakdown
+grading:
+  total_points: 100
+  categories:
+    model_building: 35       # Sequential and functional CNN architectures
+    custom_callbacks: 30     # Early stopping and LR scheduling
+    training_pipeline: 25    # Optimizer management, training, grid search
+    integration: 10          # End-to-end workflows
+
+  # Minimum thresholds
+  pass_threshold: 70
+  partial_credit: true
+
+  # Special considerations
+  inception_module:
+    description: "Bonus for elegant inception module implementation"
+    max_bonus: 3
+
+  callback_robustness:
+    description: "Bonus for robust callback implementations with edge case handling"
+    max_bonus: 3
+
+  efficient_grid_search:
+    description: "Bonus for efficient grid search implementation"
+    max_bonus: 2
+
+# Test execution
+testing:
+  framework: pytest
+  timeout: 600  # 10 minutes max (allows for actual model training)
+  test_file: "tests.py"
+
+  # Test category priorities
+  test_priorities:
+    model_architecture: 0.35    # Building correct CNN structures
+    callback_logic: 0.30        # Implementing training control mechanisms
+    training_mechanics: 0.25    # Optimizer management and search
+    integration: 0.10          # End-to-end functionality
+
+# Assignment-specific notes
+notes:
+  - "Model building (35%) emphasizes both sequential and functional API mastery"
+  - "Callbacks (30%) weighted heavily as they demonstrate deep understanding of training loops"
+  - "Inception module with concatenate is key to understanding functional API necessity"
+  - "Early stopping patience mechanism and weight restoration are critical"
+  - "LR scheduler should implement correct decay formula"
+  - "Grid search should systematically explore all parameter combinations"
+  - "Integration tests verify components work together in realistic scenarios"
+  - "CPU-feasible design means tests use small datasets and short training runs"
