@@ -181,6 +181,11 @@ class EarlyStoppingCallback(keras.callbacks.Callback):
 
         Initialize tracking variables appropriately based on whether you're
         minimizing (loss) or maximizing (accuracy) the monitored metric.
+
+        Hint: What value should best_value start at to ensure the first epoch
+        always counts as an improvement? If you're minimizing loss, what's a value
+        that any real loss will be better than? If you're maximizing accuracy,
+        what's a value that any real accuracy will beat?
         """
         # Initialize for minimizing loss (most common monitor is val_loss)
         self.best_value = np.inf if 'loss' in self.monitor else -np.inf
@@ -195,20 +200,17 @@ class EarlyStoppingCallback(keras.callbacks.Callback):
         Implement the patience mechanism: track how many epochs have passed
         without improvement, and stop training if patience is exceeded.
         Remember to save/restore weights if restore_best_weights is True.
+        
+        Hint: You need to track two scenarios:
+        1. Improvement: What should happen to 'wait' and 'best_weights'?
+        2. No improvement: What should happen to 'wait'? What if wait >= patience?
+        
+        Think about what "improvement" means - should a tiny change count? That's
+        what min_delta controls. When should you reset your patience counter?
         """
+
         logs = logs or {}
         current_value = logs.get(self.monitor)
-
-        if current_value is None:
-            return
-
-        # Check if current value is better than best value
-        if 'loss' in self.monitor:
-            # For loss metrics, lower is better
-            is_improvement = current_value < (self.best_value - self.min_delta)
-        else:
-            # For accuracy metrics, higher is better
-            is_improvement = current_value > (self.best_value + self.min_delta)
 
         if is_improvement:
             self.best_value = current_value
@@ -255,6 +257,10 @@ class LearningRateSchedulerCallback(keras.callbacks.Callback):
 
         Calculate the new learning rate based on the current epoch and the
         decay schedule, then update the optimizer's learning rate.
+
+        Hint: The formula is lr = initial_lr * (decay_rate ^ num_decays).
+        How many times have we decayed by epoch N if we decay every decay_steps epochs?
+        Think about integer division.
         """
         # Calculate new learning rate using step decay
         # lr = initial_lr * (decay_rate ^ floor(epoch / decay_steps))
