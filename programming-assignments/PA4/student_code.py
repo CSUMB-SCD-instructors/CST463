@@ -44,8 +44,25 @@ def build_sequential_cnn(input_shape: Tuple[int, int, int] = (28, 28, 1),
     DO NOT compile the model - tests will compile it separately.
     See: https://keras.io/guides/sequential_model/
     """
-    # TODO: Implement sequential CNN architecture
-    raise NotImplementedError("build_sequential_cnn not yet implemented")
+    model = models.Sequential([
+        # Input layer
+        layers.Input(shape=input_shape),
+
+        # First convolutional block
+        layers.Conv2D(16, (3, 3), activation='relu', padding='same'),
+        layers.MaxPooling2D((2, 2)),
+
+        # Second convolutional block
+        layers.Conv2D(32, (3, 3), activation='relu', padding='same'),
+        layers.MaxPooling2D((2, 2)),
+
+        # Flatten and dense layers
+        layers.Flatten(),
+        layers.Dense(64, activation='relu'),
+        layers.Dense(num_classes, activation='softmax')
+    ])
+
+    return model
 
 
 def build_functional_inception_cnn(input_shape: Tuple[int, int, int] = (28, 28, 1),
@@ -78,8 +95,31 @@ def build_functional_inception_cnn(input_shape: Tuple[int, int, int] = (28, 28, 
     DO NOT compile the model - tests will compile it separately.
     See: https://keras.io/guides/functional_api/
     """
-    # TODO: Implement functional CNN with mini-inception module
-    raise NotImplementedError("build_functional_inception_cnn not yet implemented")
+    inputs = layers.Input(shape=input_shape)
+
+    # Initial conv layer
+    x = layers.Conv2D(16, (3, 3), activation='relu', padding='same')(inputs)
+    x = layers.MaxPooling2D((2, 2))(x)
+
+    # Mini-inception module: parallel branches
+    branch_3x3 = layers.Conv2D(24, (3, 3), activation='relu', padding='same')(x)
+    branch_1x1 = layers.Conv2D(8, (1, 1), activation='relu', padding='same')(x)
+
+    # Concatenate parallel branches
+    x = layers.Concatenate()([branch_3x3, branch_1x1])
+
+    # Continue with more layers
+    x = layers.MaxPooling2D((2, 2))(x)
+    x = layers.Conv2D(32, (3, 3), activation='relu', padding='same')(x)
+    x = layers.MaxPooling2D((2, 2))(x)
+
+    # Flatten and dense layers
+    x = layers.Flatten()(x)
+    x = layers.Dense(64, activation='relu')(x)
+    outputs = layers.Dense(num_classes, activation='softmax')(x)
+
+    model = models.Model(inputs=inputs, outputs=outputs)
+    return model
 
 
 # ============================================================================
@@ -142,8 +182,11 @@ class EarlyStoppingCallback(keras.callbacks.Callback):
         Initialize tracking variables appropriately based on whether you're
         minimizing (loss) or maximizing (accuracy) the monitored metric.
         """
-        # TODO: Initialize tracking variables
-        raise NotImplementedError("EarlyStoppingCallback.on_train_begin not yet implemented")
+        # Initialize for minimizing loss (most common monitor is val_loss)
+        self.best_value = np.inf if 'loss' in self.monitor else -np.inf
+        self.best_weights = None
+        self.wait = 0
+        self.stopped_epoch = 0
 
     def on_epoch_end(self, epoch, logs=None):
         """
@@ -153,8 +196,32 @@ class EarlyStoppingCallback(keras.callbacks.Callback):
         without improvement, and stop training if patience is exceeded.
         Remember to save/restore weights if restore_best_weights is True.
         """
-        # TODO: Implement early stopping logic
-        raise NotImplementedError("EarlyStoppingCallback.on_epoch_end not yet implemented")
+        logs = logs or {}
+        current_value = logs.get(self.monitor)
+
+        if current_value is None:
+            return
+
+        # Check if current value is better than best value
+        if 'loss' in self.monitor:
+            # For loss metrics, lower is better
+            is_improvement = current_value < (self.best_value - self.min_delta)
+        else:
+            # For accuracy metrics, higher is better
+            is_improvement = current_value > (self.best_value + self.min_delta)
+
+        if is_improvement:
+            self.best_value = current_value
+            self.wait = 0
+            if self.restore_best_weights:
+                self.best_weights = self.model.get_weights()
+        else:
+            self.wait += 1
+            if self.wait >= self.patience:
+                self.stopped_epoch = epoch
+                self.model.stop_training = True
+                if self.restore_best_weights and self.best_weights is not None:
+                    self.model.set_weights(self.best_weights)
 
 
 class LearningRateSchedulerCallback(keras.callbacks.Callback):
@@ -189,8 +256,13 @@ class LearningRateSchedulerCallback(keras.callbacks.Callback):
         Calculate the new learning rate based on the current epoch and the
         decay schedule, then update the optimizer's learning rate.
         """
-        # TODO: Implement learning rate scheduling
-        raise NotImplementedError("LearningRateSchedulerCallback.on_epoch_begin not yet implemented")
+        # Calculate new learning rate using step decay
+        # lr = initial_lr * (decay_rate ^ floor(epoch / decay_steps))
+        num_decays = epoch // self.decay_steps
+        new_lr = self.initial_lr * (self.decay_rate ** num_decays)
+
+        # Update the optimizer's learning rate
+        self.model.optimizer.learning_rate.assign(new_lr)
 
 
 # ============================================================================
@@ -220,8 +292,16 @@ def get_optimizer(optimizer_name: str, learning_rate: float) -> keras.optimizers
     ValueError
         If optimizer_name is not recognized
     """
-    # TODO: Implement optimizer creation
-    raise NotImplementedError("get_optimizer not yet implemented")
+    optimizer_name_lower = optimizer_name.lower()
+
+    if optimizer_name_lower == 'sgd':
+        return keras.optimizers.SGD(learning_rate=learning_rate)
+    elif optimizer_name_lower == 'adam':
+        return keras.optimizers.Adam(learning_rate=learning_rate)
+    elif optimizer_name_lower == 'rmsprop':
+        return keras.optimizers.RMSprop(learning_rate=learning_rate)
+    else:
+        raise ValueError(f"Unknown optimizer: {optimizer_name}. Supported: 'sgd', 'adam', 'rmsprop'")
 
 
 def train_model_with_config(
@@ -271,8 +351,27 @@ def train_model_with_config(
     Use categorical crossentropy loss and track accuracy.
     Return the History object from model.fit().
     """
-    # TODO: Implement training with configuration
-    raise NotImplementedError("train_model_with_config not yet implemented")
+    # Get optimizer instance
+    optimizer = get_optimizer(optimizer_name, learning_rate)
+
+    # Compile model
+    model.compile(
+        optimizer=optimizer,
+        loss='categorical_crossentropy',
+        metrics=['accuracy']
+    )
+
+    # Train model
+    history = model.fit(
+        X_train, y_train,
+        validation_data=(X_val, y_val),
+        batch_size=batch_size,
+        epochs=epochs,
+        callbacks=callbacks,
+        verbose=verbose
+    )
+
+    return history
 
 
 def run_grid_search(
@@ -320,8 +419,47 @@ def run_grid_search(
     Generate all combinations of parameters from param_grid, train a fresh
     model for each combination, and collect results.
     """
-    # TODO: Implement grid search
-    raise NotImplementedError("run_grid_search not yet implemented")
+    from itertools import product
+
+    # Extract parameter names and values
+    param_names = list(param_grid.keys())
+    param_values = list(param_grid.values())
+
+    # Generate all combinations
+    results = []
+    for combination in product(*param_values):
+        # Create parameter dict for this combination
+        params = dict(zip(param_names, combination))
+
+        # Build fresh model
+        model = model_builder_func()
+
+        # Extract training parameters
+        optimizer = params.get('optimizer', 'adam')
+        learning_rate = params.get('learning_rate', 0.001)
+        batch_size = params.get('batch_size', 32)
+
+        # Train model
+        history = train_model_with_config(
+            model, X_train, y_train, X_val, y_val,
+            optimizer_name=optimizer,
+            learning_rate=learning_rate,
+            batch_size=batch_size,
+            epochs=epochs,
+            verbose=verbose
+        )
+
+        # Collect results
+        result = {
+            **params,  # Include all hyperparameters
+            'train_loss': history.history['loss'][-1],
+            'train_accuracy': history.history['accuracy'][-1],
+            'val_loss': history.history['val_loss'][-1],
+            'val_accuracy': history.history['val_accuracy'][-1],
+        }
+        results.append(result)
+
+    return results
 
 
 # ============================================================================

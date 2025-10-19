@@ -173,7 +173,8 @@ class TestCallbacks:
 
         # Build simple model
         model = keras.Sequential([
-            keras.layers.Flatten(input_shape=(28, 28, 1)),
+            keras.layers.Input(shape=(28, 28, 1)),
+            keras.layers.Flatten(),
             keras.layers.Dense(10, activation='softmax')
         ])
         model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
@@ -213,7 +214,8 @@ class TestCallbacks:
 
         # Build simple model
         model = keras.Sequential([
-            keras.layers.Flatten(input_shape=(28, 28, 1)),
+            keras.layers.Input(shape=(28, 28, 1)),
+            keras.layers.Flatten(),
             keras.layers.Dense(10, activation='softmax')
         ])
         model.compile(optimizer='adam', loss='categorical_crossentropy')
@@ -305,7 +307,8 @@ class TestTraining:
         (X_train, y_train), (X_val, y_val) = sample_mnist_data
 
         model = keras.Sequential([
-            keras.layers.Flatten(input_shape=(28, 28, 1)),
+            keras.layers.Input(shape=(28, 28, 1)),
+            keras.layers.Flatten(),
             keras.layers.Dense(10, activation='softmax')
         ])
 
@@ -326,7 +329,8 @@ class TestTraining:
         (X_train, y_train), (X_val, y_val) = sample_mnist_data
 
         model = keras.Sequential([
-            keras.layers.Flatten(input_shape=(28, 28, 1)),
+            keras.layers.Input(shape=(28, 28, 1)),
+            keras.layers.Flatten(),
             keras.layers.Dense(10, activation='softmax')
         ])
 
@@ -350,7 +354,8 @@ class TestTraining:
         (X_train, y_train), (X_val, y_val) = sample_mnist_data
 
         model = keras.Sequential([
-            keras.layers.Flatten(input_shape=(28, 28, 1)),
+            keras.layers.Input(shape=(28, 28, 1)),
+            keras.layers.Flatten(),
             keras.layers.Dense(10, activation='softmax')
         ])
 
@@ -371,7 +376,8 @@ class TestTraining:
         (X_train, y_train), (X_val, y_val) = sample_mnist_data
 
         model = keras.Sequential([
-            keras.layers.Flatten(input_shape=(28, 28, 1)),
+            keras.layers.Input(shape=(28, 28, 1)),
+            keras.layers.Flatten(),
             keras.layers.Dense(10, activation='softmax')
         ])
 
@@ -406,7 +412,8 @@ class TestGridSearch:
 
         def model_builder():
             model = keras.Sequential([
-                keras.layers.Flatten(input_shape=(28, 28, 1)),
+                keras.layers.Input(shape=(28, 28, 1)),
+                keras.layers.Flatten(),
                 keras.layers.Dense(10, activation='softmax')
             ])
             return model
@@ -438,7 +445,8 @@ class TestGridSearch:
 
         def model_builder():
             return keras.Sequential([
-                keras.layers.Flatten(input_shape=(28, 28, 1)),
+                keras.layers.Input(shape=(28, 28, 1)),
+                keras.layers.Flatten(),
                 keras.layers.Dense(10, activation='softmax')
             ])
 
@@ -481,7 +489,8 @@ class TestGridSearch:
 
         def model_builder():
             return keras.Sequential([
-                keras.layers.Flatten(input_shape=(28, 28, 1)),
+                keras.layers.Input(shape=(28, 28, 1)),
+                keras.layers.Flatten(),
                 keras.layers.Dense(10, activation='softmax')
             ])
 
