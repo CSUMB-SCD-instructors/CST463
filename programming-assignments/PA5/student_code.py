@@ -13,6 +13,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers, Model
+from typing import Tuple, Dict, List
 import utils
 
 
@@ -20,8 +21,11 @@ import utils
 # PART 1: DATA PREPROCESSING (10 points)
 # ============================================================================
 
-def load_and_preprocess_imdb(vocab_size=10000, max_length=200,
-                              train_size=10000, val_size=2500, test_size=5000):
+def load_and_preprocess_imdb(vocab_size: int = 10000, max_length: int = 200,
+                              train_size: int = 10000, val_size: int = 2500,
+                              test_size: int = 5000) -> Tuple[Tuple[np.ndarray, np.ndarray],
+                                                               Tuple[np.ndarray, np.ndarray],
+                                                               Tuple[np.ndarray, np.ndarray]]:
     """
     Load and preprocess the IMDB dataset for sentiment classification.
 
@@ -63,7 +67,7 @@ def load_and_preprocess_imdb(vocab_size=10000, max_length=200,
     pass
 
 
-def create_vocabulary_mappings(vocab_size=10000):
+def create_vocabulary_mappings(vocab_size: int = 10000) -> Tuple[Dict[str, int], Dict[int, str]]:
     """
     Create mappings between words and indices for the IMDB vocabulary.
 
@@ -96,9 +100,13 @@ def create_vocabulary_mappings(vocab_size=10000):
 # PART 2: BASELINE EMBEDDINGS (8 points)
 # ============================================================================
 
-def build_random_embedding_model(vocab_size, embedding_dim, max_length):
+def build_random_embedding_model(vocab_size: int, embedding_dim: int,
+                                 max_length: int) -> keras.Model:
     """
-    Build a simple sentiment classification model with random embeddings.
+    Build a COMPLETE sentiment classification model with random embeddings.
+
+    This builds an end-to-end model specifically for random embeddings.
+    (See build_sentiment_classifier() for a more flexible approach.)
 
     Architecture:
     - Embedding layer (randomly initialized, trainable)
@@ -122,9 +130,10 @@ def build_random_embedding_model(vocab_size, embedding_dim, max_length):
 
     Notes:
     ------
-    - Use 'binary_crossentropy' loss and 'accuracy' metric
-    - Choose an appropriate optimizer (Adam is a good default)
+    - This builds a COMPLETE model (embeddings + classifier)
     - The embedding layer should be trainable
+    - Compile the model with appropriate loss, optimizer, and metrics for binary classification
+    - Make sure to compile before returning
 
     [4 points]
     """
@@ -132,11 +141,13 @@ def build_random_embedding_model(vocab_size, embedding_dim, max_length):
     pass
 
 
-def build_pretrained_embedding_model(vocab_size, embedding_dim, max_length,
-                                     pretrained_embeddings):
+def build_pretrained_embedding_model(vocab_size: int, embedding_dim: int,
+                                     max_length: int,
+                                     pretrained_embeddings: np.ndarray) -> keras.Model:
     """
-    Build a sentiment classification model with pretrained embeddings.
+    Build a COMPLETE sentiment classification model with pretrained embeddings.
 
+    This builds an end-to-end model specifically for pretrained embeddings.
     Similar to random embedding model, but uses pretrained embedding weights.
 
     Parameters:
@@ -157,9 +168,11 @@ def build_pretrained_embedding_model(vocab_size, embedding_dim, max_length,
 
     Notes:
     ------
+    - This builds a COMPLETE model (embeddings + classifier)
     - Initialize the embedding layer with pretrained_embeddings
     - You can choose whether to make embeddings trainable or frozen
     - Architecture should be similar to random embedding model
+    - Look up how to pass pretrained weights to a Keras Embedding layer
 
     [4 points]
     """
@@ -171,7 +184,8 @@ def build_pretrained_embedding_model(vocab_size, embedding_dim, max_length,
 # PART 3: AUTOENCODER EMBEDDINGS (15 points)
 # ============================================================================
 
-def build_autoencoder_encoder(vocab_size, embedding_dim, max_length):
+def build_autoencoder_encoder(vocab_size: int, embedding_dim: int,
+                               max_length: int) -> keras.Model:
     """
     Build the encoder part of an autoencoder for learning text embeddings.
 
@@ -179,9 +193,10 @@ def build_autoencoder_encoder(vocab_size, embedding_dim, max_length):
     to a lower-dimensional embedding (the "bottleneck").
 
     Architecture suggestion:
-    - Input: bag-of-words vector (vocab_size,)
-    - Dense layer(s) to compress information
-    - Bottleneck layer (embedding_dim,) - this is your embedding
+    - Input: bag-of-words vector of shape (vocab_size,)
+    - Hidden layer(s): Dense layers to compress information
+    - Bottleneck layer: Dense with embedding_dim units - this is your learned embedding
+    - Choose appropriate activation functions
 
     Parameters:
     -----------
@@ -201,7 +216,8 @@ def build_autoencoder_encoder(vocab_size, embedding_dim, max_length):
     ------
     - Use bag-of-words as input (not sequences)
     - The bottleneck layer produces the embedding
-    - Consider using ReLU or tanh activations in hidden layers
+    - Choose appropriate activation functions for hidden and bottleneck layers
+    - No need to compile this model - it will be used as part of the full autoencoder
 
     [7 points]
     """
@@ -209,7 +225,7 @@ def build_autoencoder_encoder(vocab_size, embedding_dim, max_length):
     pass
 
 
-def build_autoencoder_decoder(vocab_size, embedding_dim):
+def build_autoencoder_decoder(vocab_size: int, embedding_dim: int) -> keras.Model:
     """
     Build the decoder part of an autoencoder for learning text embeddings.
 
@@ -217,9 +233,10 @@ def build_autoencoder_decoder(vocab_size, embedding_dim):
     original bag-of-words representation.
 
     Architecture suggestion:
-    - Input: embedding vector (embedding_dim,)
-    - Dense layer(s) to expand information
-    - Output layer (vocab_size,) to reconstruct bag-of-words
+    - Input: embedding vector of shape (embedding_dim,)
+    - Hidden layer(s): Dense layers to expand information
+    - Output layer: Dense with vocab_size units to reconstruct bag-of-words
+    - Choose appropriate activation functions (output should be values between 0 and 1)
 
     Parameters:
     -----------
@@ -236,8 +253,8 @@ def build_autoencoder_decoder(vocab_size, embedding_dim):
     Notes:
     ------
     - Output should match the input bag-of-words representation
-    - Consider using sigmoid or softmax activation for output
-    - The decoder is symmetric to the encoder
+    - The decoder should be roughly symmetric to the encoder
+    - No need to compile this model - it will be used as part of the full autoencoder
 
     [6 points]
     """
@@ -245,16 +262,18 @@ def build_autoencoder_decoder(vocab_size, embedding_dim):
     pass
 
 
-def train_autoencoder(encoder, decoder, X_train, epochs=20, batch_size=128):
+def train_autoencoder(encoder: keras.Model, decoder: keras.Model,
+                      X_train: np.ndarray, epochs: int = 20,
+                      batch_size: int = 128) -> keras.callbacks.History:
     """
     Train the autoencoder (encoder + decoder) on bag-of-words data.
 
     Parameters:
     -----------
     encoder : keras.Model
-        Encoder model
+        Encoder model from build_autoencoder_encoder()
     decoder : keras.Model
-        Decoder model
+        Decoder model from build_autoencoder_decoder()
     X_train : np.ndarray
         Training sequences of shape (n_samples, max_length)
         Will be converted to bag-of-words internally
@@ -265,15 +284,23 @@ def train_autoencoder(encoder, decoder, X_train, epochs=20, batch_size=128):
 
     Returns:
     --------
-    history : keras.History
-        Training history
+    history : keras.callbacks.History
+        Training history object
 
     Notes:
     ------
-    - Convert X_train to bag-of-words using utils.sequences_to_bow()
-    - Chain encoder and decoder: input -> encoder -> decoder -> reconstruction
-    - Use MSE or binary crossentropy loss
-    - The autoencoder should reconstruct its input
+    Step-by-step approach:
+    1. Convert X_train to bag-of-words using utils.sequences_to_bow()
+    2. Create a combined model:
+       - Chain encoder and decoder: input → encoder → decoder → reconstruction
+       - Use keras.Model with Input layer and chained outputs
+    3. Compile the combined model with appropriate loss and optimizer
+       - Consider what loss function makes sense for reconstructing bag-of-words
+    4. Train the model:
+       - Input and target are both the bag-of-words representation
+       - The model learns to reconstruct its input through the bottleneck
+
+    The autoencoder should compress and reconstruct: BoW → encoder → embedding → decoder → reconstructed BoW
 
     [2 points]
     """
@@ -285,7 +312,8 @@ def train_autoencoder(encoder, decoder, X_train, epochs=20, batch_size=128):
 # PART 4: WORD2VEC-STYLE EMBEDDINGS (15 points)
 # ============================================================================
 
-def generate_skipgram_pairs(sequences, window_size=2, vocab_size=10000):
+def generate_skipgram_pairs(sequences: np.ndarray, window_size: int = 2,
+                             vocab_size: int = 10000) -> np.ndarray:
     """
     Generate (target, context) pairs for skip-gram training.
 
@@ -320,15 +348,19 @@ def generate_skipgram_pairs(sequences, window_size=2, vocab_size=10000):
     pass
 
 
-def build_word2vec_model(vocab_size, embedding_dim):
+def build_word2vec_model(vocab_size: int, embedding_dim: int) -> keras.Model:
     """
     Build a Word2Vec-style model using skip-gram architecture.
 
+    This model has TWO separate embedding layers (one for targets, one for contexts)
+    and learns to predict whether a target-context pair is real.
+
     Architecture:
-    - Target embedding layer (vocab_size, embedding_dim)
-    - Context embedding layer (vocab_size, embedding_dim)
+    - Two inputs: target word index and context word index
+    - Target embedding layer (vocab_size, embedding_dim) - this is what you'll use later
+    - Context embedding layer (vocab_size, embedding_dim) - used during training
     - Dot product between target and context embeddings
-    - Sigmoid activation for binary classification
+    - Sigmoid activation for binary classification (is this a real pair?)
 
     Parameters:
     -----------
@@ -344,10 +376,18 @@ def build_word2vec_model(vocab_size, embedding_dim):
 
     Notes:
     ------
-    - Use two separate embedding layers (target and context)
-    - The target embedding is what you'll extract later
-    - Use binary crossentropy loss (predicting if context is real or negative sample)
-    - This is a simplified version; you can use negative sampling implicitly
+    Step-by-step approach:
+    1. Create two Input layers (one for target, one for context)
+    2. Create two separate Embedding layers (target_embedding and context_embedding)
+    3. Apply embeddings to the inputs
+    4. Compute dot product between target and context embeddings
+       - Result should be a single score per pair
+       - Look up how to compute dot product in Keras/TensorFlow
+    5. Apply sigmoid activation to get probability
+    6. Create Model with both inputs and the probability output
+    7. Compile with appropriate loss and optimizer for binary classification
+
+    The target_embedding layer is what contains your learned word embeddings.
 
     [5 points]
     """
@@ -355,7 +395,8 @@ def build_word2vec_model(vocab_size, embedding_dim):
     pass
 
 
-def train_word2vec(model, pairs, epochs=10, batch_size=128, validation_split=0.1):
+def train_word2vec(model: keras.Model, pairs: np.ndarray, epochs: int = 10,
+                   batch_size: int = 128, validation_split: float = 0.1) -> keras.callbacks.History:
     """
     Train the Word2Vec model on (target, context) pairs.
 
@@ -374,13 +415,15 @@ def train_word2vec(model, pairs, epochs=10, batch_size=128, validation_split=0.1
 
     Returns:
     --------
-    history : keras.History
-        Training history
+    history : keras.callbacks.History
+        Training history object
 
     Notes:
     ------
-    - Labels should be all 1s (real context pairs)
-    - In a full implementation, you'd add negative samples
+    - Split pairs into target words (pairs[:, 0]) and context words (pairs[:, 1])
+    - Labels should be all 1s (these are all real context pairs)
+    - Call model.fit() with [targets, contexts] as input and labels as output
+    - In a full implementation, you'd add negative samples (random non-context words)
     - For this assignment, training on positive pairs is sufficient
 
     [4 points]
@@ -415,14 +458,15 @@ class SimpleAttention(layers.Layer):
         """
         Initialize the attention layer.
 
-        You may want to create trainable weight matrices here.
+        Note: Trainable weights should be created in build(), not here.
+        Just call the parent class initializer.
         """
         super(SimpleAttention, self).__init__(**kwargs)
-        # TODO: Initialize any trainable parameters you need
+        # Trainable weights will be created in build()
 
     def build(self, input_shape):
         """
-        Create trainable weights.
+        Create trainable weights for computing attention scores.
 
         Parameters:
         -----------
@@ -431,9 +475,17 @@ class SimpleAttention(layers.Layer):
 
         Notes:
         ------
-        - Create a weight matrix to compute attention scores
-        - You might want a matrix of shape (embedding_dim, 1) to compute scores
-        - Don't forget to call super().build(input_shape)
+        You need to create a weight matrix to compute attention scores.
+
+        Step-by-step approach:
+        1. Get the embedding dimension from input_shape (last dimension)
+        2. Create a trainable weight matrix of shape (embedding_dim, 1)
+           - Use self.add_weight() to create trainable parameters
+           - Initialize with appropriate random initialization
+           - Give it a descriptive name
+        3. Call super().build(input_shape) at the end
+
+        This weight matrix will be used to compute a score for each word in the sequence.
         """
         # TODO: Implement this method
         super(SimpleAttention, self).build(input_shape)
@@ -447,7 +499,7 @@ class SimpleAttention(layers.Layer):
         inputs : tensor
             Input embeddings of shape (batch_size, sequence_length, embedding_dim)
         mask : tensor, optional
-            Mask for padding tokens
+            Boolean mask for padding tokens, shape (batch_size, sequence_length)
 
         Returns:
         --------
@@ -457,10 +509,34 @@ class SimpleAttention(layers.Layer):
 
         Notes:
         ------
-        - Compute attention scores for each position
-        - Apply softmax to get weights
-        - Handle masking if provided (set padding positions to large negative)
-        - Return weighted sum of inputs
+        Step-by-step approach:
+
+        1. Compute attention scores:
+           - Matrix multiply inputs with your weight matrix
+           - Result should have shape (batch_size, sequence_length, 1)
+           - Squeeze to get (batch_size, sequence_length)
+
+        2. Apply mask (if provided):
+           - Padding positions should not receive attention
+           - Set masked positions to large negative values
+           - This ensures they get ~0 weight after softmax
+
+        3. Apply softmax:
+           - Convert scores to normalized attention weights
+           - Weights should sum to 1.0 across each sequence
+
+        4. Apply attention weights:
+           - Expand weights for broadcasting if needed
+           - Multiply inputs by attention weights element-wise
+           - Sum across the sequence dimension
+           - Result shape: (batch_size, embedding_dim)
+
+        Useful TensorFlow functions:
+        - tf.matmul() - matrix multiplication
+        - tf.squeeze() / tf.expand_dims() - manipulate dimensions
+        - tf.where() - conditional selection
+        - tf.nn.softmax() - normalize to probabilities
+        - tf.reduce_sum() - sum along a dimension
         """
         # TODO: Implement this method
         pass
@@ -468,6 +544,9 @@ class SimpleAttention(layers.Layer):
     def compute_output_shape(self, input_shape):
         """
         Compute the output shape.
+
+        THIS METHOD IS ALREADY COMPLETE - you don't need to modify it.
+        It tells Keras what shape to expect from this layer.
 
         Parameters:
         -----------
@@ -486,11 +565,15 @@ class SimpleAttention(layers.Layer):
 # PART 6: SHARED CLASSIFIER & EVALUATION (10 points)
 # ============================================================================
 
-def build_sentiment_classifier(embedding_model, max_length, model_type='standard'):
+def build_sentiment_classifier(embedding_model, max_length: int,
+                                model_type: str = 'standard') -> keras.Model:
     """
     Build a sentiment classifier using a given embedding approach.
 
-    This function takes an embedding model and adds a classification head.
+    This is a FLEXIBLE/GENERIC function that can work with any embedding method.
+    It's different from the specific builder functions (build_random_embedding_model, etc.)
+    which create complete models for a single approach. This function lets you plug in
+    different embeddings to compare them.
 
     Parameters:
     -----------
@@ -509,11 +592,36 @@ def build_sentiment_classifier(embedding_model, max_length, model_type='standard
 
     Notes:
     ------
-    - Different embedding types may require different integration strategies
-    - For 'autoencoder': convert sequences to BoW first
-    - For 'attention': apply attention layer to embeddings
-    - Add appropriate classification layers on top
-    - Use sigmoid activation for binary classification
+    Different embedding types require different integration strategies.
+    Here's what to do for each model_type:
+
+    'standard': embedding_model is a keras.layers.Embedding layer
+        - Create Input layer for sequences with appropriate shape
+        - Apply embedding_model to the input
+        - Add GlobalAveragePooling1D to get fixed-size vector
+        - Add Dense layer(s) for classification
+        - Add output layer with appropriate activation for binary classification
+
+    'autoencoder': embedding_model is your trained encoder
+        - Create Input layer for sequences
+        - Convert sequences to bag-of-words (use Lambda layer with utils.sequences_to_bow)
+        - Apply embedding_model (encoder) to bag-of-words
+        - Add Dense layer(s) for classification
+        - Add output layer for binary classification
+
+    'word2vec': embedding_model is your trained Word2Vec model
+        - Extract the target embedding weights from Word2Vec model
+        - Create new Embedding layer with these weights
+        - Follow same structure as 'standard'
+
+    'attention': embedding_model is an Embedding layer
+        - Create Input layer for sequences
+        - Apply embedding_model to get embeddings
+        - Apply SimpleAttention() layer to get attended representation
+        - Add Dense layer(s) for classification
+        - Add output layer for binary classification
+
+    All models should be compiled with appropriate loss, optimizer, and metrics for binary classification
 
     [4 points]
     """
@@ -521,31 +629,49 @@ def build_sentiment_classifier(embedding_model, max_length, model_type='standard
     pass
 
 
-def evaluate_all_embeddings(models_dict, X_test, y_test):
+def evaluate_all_embeddings(models_dict: Dict[str, keras.Model],
+                             X_test: np.ndarray,
+                             y_test: np.ndarray) -> Dict[str, Dict[str, float]]:
     """
-    Evaluate all embedding approaches on the test set.
+    Evaluate multiple trained models on the test set with the provided models.
 
     Parameters:
     -----------
-    models_dict : dict
-        Dictionary mapping model names to trained models
-        Example: {'random': model1, 'word2vec': model2, ...}
+    models_dict : dict[str, keras.Model]
+        Dictionary mapping descriptive model names to trained classifier models.
+        All models should already be trained and ready for evaluation.
+        Example: {
+            'Random Embeddings': random_model,
+            'Word2Vec': word2vec_model,
+            'Autoencoder': autoencoder_model,
+            'Attention': attention_model
+        }
     X_test : np.ndarray
-        Test sequences
+        Test sequences of shape (n_samples, max_length)
     y_test : np.ndarray
-        Test labels
+        Test labels of shape (n_samples,)
 
     Returns:
     --------
-    results : dict
-        Dictionary mapping model names to evaluation metrics
-        Each entry should contain at least 'accuracy' and 'loss'
+    results : dict[str, dict[str, float]]
+        Dictionary mapping model names to their evaluation metrics.
+        Each entry should contain at least 'accuracy' and 'loss'.
+        Example: {
+            'Random Embeddings': {'accuracy': 0.75, 'loss': 0.52},
+            'Word2Vec': {'accuracy': 0.82, 'loss': 0.43},
+            ...
+        }
 
     Notes:
     ------
-    - Evaluate each model on the test set
-    - Return metrics in a structured format for comparison
-    - Consider including additional metrics (precision, recall, etc.)
+    Step-by-step approach:
+    1. Create an empty results dictionary
+    2. For each model name and model in models_dict:
+       - Evaluate the model on test set to get metrics
+       - Store in results dictionary with structure: {'accuracy': acc, 'loss': loss}
+    3. Return the results dictionary
+
+    Look up how to evaluate a trained Keras model and extract the metrics.
 
     [3 points]
     """
@@ -553,11 +679,13 @@ def evaluate_all_embeddings(models_dict, X_test, y_test):
     pass
 
 
-def extract_embeddings(model, words, word_to_idx, model_type='standard'):
+def extract_embeddings(model: keras.Model, words: List[str],
+                       word_to_idx: Dict[str, int],
+                       model_type: str = 'standard') -> np.ndarray:
     """
-    Extract embedding vectors for specific words.
+    Extract embedding vectors for specific words from a trained model.
 
-    This is useful for visualization and analysis.
+    This is useful for visualization and analysis in Part 2.
 
     Parameters:
     -----------
@@ -565,7 +693,7 @@ def extract_embeddings(model, words, word_to_idx, model_type='standard'):
         Trained model containing embeddings
     words : list of str
         List of words to extract embeddings for
-    word_to_idx : dict
+    word_to_idx : dict[str, int]
         Dictionary mapping words to indices
     model_type : str
         Type of embedding: 'standard', 'word2vec', 'autoencoder', 'attention'
@@ -577,11 +705,24 @@ def extract_embeddings(model, words, word_to_idx, model_type='standard'):
 
     Notes:
     ------
-    - Handle words not in vocabulary (return zero vector or skip)
-    - Different model types store embeddings differently
-    - For standard models: extract from embedding layer
-    - For Word2Vec: extract from target embedding layer
-    - For autoencoder: may need to encode one-hot vectors
+    Different model types store embeddings in different places:
+
+    'standard' or 'attention':
+        - Find the Embedding layer in the model
+        - Extract its weights: embedding_layer.get_weights()[0]
+        - Look up word indices and return corresponding rows
+
+    'word2vec':
+        - Similar to 'standard', but find the target embedding layer
+        - May be named or be the first Embedding layer
+
+    'autoencoder':
+        - Create one-hot or bag-of-words vectors for the words
+        - Pass through the encoder to get embeddings
+
+    Handle words not in vocabulary:
+    - Return zero vector for unknown words
+    - Or skip them entirely (adjust output shape accordingly)
 
     [3 points]
     """
@@ -593,7 +734,8 @@ def extract_embeddings(model, words, word_to_idx, model_type='standard'):
 # HELPER FUNCTIONS (Optional - not graded)
 # ============================================================================
 
-def create_simple_pretrained_embeddings(vocab_size, embedding_dim, seed=42):
+def create_simple_pretrained_embeddings(vocab_size: int, embedding_dim: int,
+                                       seed: int = 42) -> np.ndarray:
     """
     Create simple "pretrained" embeddings for the baseline.
 
