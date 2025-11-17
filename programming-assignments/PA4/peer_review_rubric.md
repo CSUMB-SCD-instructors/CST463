@@ -116,13 +116,12 @@
 ## 6. Visualization Quality & Communication (2 points)
 
 **Excellent (2 points):**
-- All plots created using matplotlib.pyplot exclusively
 - Clear, well-labeled visualizations with proper axis labels, legends, and titles
 - Figures effectively support analysis and findings
 - Professional presentation quality
 
 **Good (1 point):**
-- Matplotlib-only visualizations with adequate labeling
+- Visualizations have adequate labeling
 - Figures generally support analysis
 
 **Needs Improvement (0 points):**
@@ -149,3 +148,42 @@ This rubric evaluates **quality of analysis and reasoning** rather than specific
 - Producing identical training curves
 
 The goal is to reward thoughtful experimentation, clear reasoning, and meaningful insights - not answer-matching.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
