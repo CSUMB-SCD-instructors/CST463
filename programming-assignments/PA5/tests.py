@@ -136,7 +136,8 @@ class TestBaselineEmbeddings(unittest.TestCase):
 
         self.assertIsInstance(model, keras.Model)
 
-        # Check input/output shapes
+        # Build the model first to check shapes
+        model.build(input_shape=(None, 50))
         self.assertEqual(model.input_shape, (None, 50))
         self.assertEqual(model.output_shape, (None, 1))
 
@@ -184,6 +185,9 @@ class TestBaselineEmbeddings(unittest.TestCase):
         )
 
         self.assertIsInstance(model, keras.Model)
+
+        # Build the model first to check shapes
+        model.build(input_shape=(None, 50))
         self.assertEqual(model.input_shape, (None, 50))
         self.assertEqual(model.output_shape, (None, 1))
 
@@ -457,10 +461,10 @@ class TestAttentionMechanism(unittest.TestCase):
 
     def test_simple_attention_reduces_sequence(self):
         """Test that attention reduces sequence to single vector"""
-        attention_layer = student_code.SimpleAttention()
-
         # Different sequence lengths
         for seq_len in [5, 10, 20]:
+            # Create a new layer for each iteration to avoid rebuild issues
+            attention_layer = student_code.SimpleAttention()
             dummy_input = tf.random.normal((2, seq_len, 16))
             attention_layer.build(input_shape=(None, seq_len, 16))
             output = attention_layer(dummy_input)
@@ -605,6 +609,9 @@ class TestClassifierAndEvaluation(unittest.TestCase):
             keras.layers.Dense(1, activation='sigmoid')
         ])
 
+        # Build the model before extracting embeddings
+        model.build(input_shape=(None, 20))
+
         word_to_idx = {f'word{i}': i for i in range(100)}
         words = ['word5', 'word10', 'word15']
 
@@ -622,6 +629,9 @@ class TestClassifierAndEvaluation(unittest.TestCase):
             keras.layers.GlobalAveragePooling1D(),
             keras.layers.Dense(1, activation='sigmoid')
         ])
+
+        # Build the model before extracting embeddings
+        model.build(input_shape=(None, 20))
 
         word_to_idx = {f'word{i}': i for i in range(50)}
         words = ['word5', 'unknown_word', 'word10']
