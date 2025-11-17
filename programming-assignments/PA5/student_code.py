@@ -97,7 +97,7 @@ def build_random_embedding_model(vocab_size: int, embedding_dim: int,
                                  max_length: int) -> keras.Model:
     """Build a sentiment classification model with random embeddings."""
     model = keras.Sequential([
-        layers.Embedding(vocab_size, embedding_dim, input_length=max_length),
+        layers.Embedding(vocab_size, embedding_dim),
         layers.GlobalAveragePooling1D(),
         layers.Dense(16, activation='relu'),
         layers.Dense(1, activation='sigmoid')
@@ -120,7 +120,6 @@ def build_pretrained_embedding_model(vocab_size: int, embedding_dim: int,
         layers.Embedding(
             vocab_size,
             embedding_dim,
-            input_length=max_length,
             weights=[pretrained_embeddings],
             trainable=True  # Can experiment with False
         ),
@@ -225,8 +224,8 @@ def build_word2vec_model(vocab_size: int, embedding_dim: int) -> keras.Model:
     context_input = layers.Input(shape=(1,), name='context')
 
     # Shared embedding layer for both (we'll use target_embedding later)
-    target_embedding = layers.Embedding(vocab_size, embedding_dim, input_length=1, name='target_embedding')
-    context_embedding = layers.Embedding(vocab_size, embedding_dim, input_length=1, name='context_embedding')
+    target_embedding = layers.Embedding(vocab_size, embedding_dim, name='target_embedding')
+    context_embedding = layers.Embedding(vocab_size, embedding_dim, name='context_embedding')
 
     # Get embeddings
     target_vector = target_embedding(target_input)
@@ -284,6 +283,7 @@ class SimpleAttention(layers.Layer):
     def __init__(self, **kwargs):
         super(SimpleAttention, self).__init__(**kwargs)
         self.W = None
+        self.supports_masking = True
 
     def build(self, input_shape):
         """Create trainable weights for computing attention scores."""
@@ -369,7 +369,7 @@ def build_sentiment_classifier(embedding_model, max_length: int,
         vocab_size, embedding_dim = weights[0].shape
 
         inputs = layers.Input(shape=(max_length,))
-        x = layers.Embedding(vocab_size, embedding_dim, weights=weights, input_length=max_length)(inputs)
+        x = layers.Embedding(vocab_size, embedding_dim, weights=weights)(inputs)
         x = layers.GlobalAveragePooling1D()(x)
         x = layers.Dense(16, activation='relu')(x)
         outputs = layers.Dense(1, activation='sigmoid')(x)

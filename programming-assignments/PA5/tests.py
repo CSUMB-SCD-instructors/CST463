@@ -552,7 +552,7 @@ class TestClassifierAndEvaluation(unittest.TestCase):
 
         for name in ['model1', 'model2']:
             model = keras.Sequential([
-                keras.layers.Embedding(100, 16, input_length=20),
+                keras.layers.Embedding(100, 16),
                 keras.layers.GlobalAveragePooling1D(),
                 keras.layers.Dense(1, activation='sigmoid')
             ])
@@ -578,7 +578,7 @@ class TestClassifierAndEvaluation(unittest.TestCase):
         """Test that evaluation returns proper metrics"""
         # Create and train a simple model
         model = keras.Sequential([
-            keras.layers.Embedding(100, 16, input_length=20),
+            keras.layers.Embedding(100, 16),
             keras.layers.GlobalAveragePooling1D(),
             keras.layers.Dense(1, activation='sigmoid')
         ])
@@ -604,7 +604,7 @@ class TestClassifierAndEvaluation(unittest.TestCase):
         """Test embedding extraction"""
         # Create a simple model with embeddings
         model = keras.Sequential([
-            keras.layers.Embedding(100, 16, input_length=20, name='embedding'),
+            keras.layers.Embedding(100, 16, name='embedding'),
             keras.layers.GlobalAveragePooling1D(),
             keras.layers.Dense(1, activation='sigmoid')
         ])
@@ -625,7 +625,7 @@ class TestClassifierAndEvaluation(unittest.TestCase):
     def test_extract_embeddings_unknown_words(self):
         """Test extraction with unknown words"""
         model = keras.Sequential([
-            keras.layers.Embedding(50, 16, input_length=20),
+            keras.layers.Embedding(50, 16),
             keras.layers.GlobalAveragePooling1D(),
             keras.layers.Dense(1, activation='sigmoid')
         ])
