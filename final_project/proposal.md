@@ -1,26 +1,32 @@
 # Final project: project definition
 
-The purpose of the project definition is to make sure you can hit the ground running with your project work. 
+The purpose of the project definition is to make sure you can hit the ground running with your project work.
+
 ## Instructions
-- Work closely with your team.
-- Discuss project ideas and copy and fill out [the template project proposal document](proposal-template.md).
+- Discuss project ideas with your team and fill out the [template project proposal document](proposal-template.md).
+  - While this file is a markdown file, you should be able to open it on the web or copy its contents to a word document.  This may be helpful if you need to include images.
 
 ## Submission
 
-Submit a PDF version of your document on Canvas, named project-definition.pdf.  Only one project definition document should be submitted by each project team.  I may ask your team to adjust its project goal.
+Submit a PDF or markdown version of your document on Canvas, named proposal.pdf (or proposal.md).
+Only one project definition document should be submitted by each project team.
+Note that I may ask your team to adjust its project goal.
+
+Please limit your submission to a reasonable length (e.g. 1 page).
 
 ## Grading
 
-This project definition is worth 10% of your overall project score.  Each team member will get the same credit.  
-Item
+This project definition is worth 10% of your overall project score.  Each team member will get the same credit.
 
-
-
-- (25 points) ***Project idea***. The main thing is to describe your idea clearly.  If possible, begin by describing the problem that your system will solve.  It is helpful to describe a basic goal and also a stretch goal.
-- (25 points) ***Data set***.  Give an overview of the data set and provide a link to the download page.
-- (25 points) ***Deep learning techniques/architecture***.  List techniques/architectures that are appropriate to your project.  For text-based projects, consider using the Transformer architecture, because it has become very popular in the last few years.
-- (25 points) ***Computational needs***.  Do some research to make sure that with Colab, your own machines, or other web resources you will be able to carry out your project.  Describe the computation resources you plan to use, and provide a reasonable argument as to why they will be enough.
-
-
-
-
+Components:
+- (2 points) ***Project idea***.
+  - The main thing is to describe your idea clearly.  If possible, begin by describing the problem that your system will solve.
+  - It should contain, at a minimum a ***baseine goal*** and a ***stretch goal*** that are reasonable.
+- (2 points) ***Data set***.
+  - Give an overview of the data set and provide a link to the download page.
+- (2 points) ***Planned architecture***
+  - List what architectures you think you may use, and explain why these are appropriate.
+- (2 points) ***Deep learning techniques/architecture***.
+  - List techniques that are appropriate to your project and explain why.
+- (2 points) ***Computational needs***.
+  - Do some research to make sure that with Colab, your own machines, or other web resources you will be able to carry out your project.  Describe the computation resources you plan to use, and provide a reasonable argument as to why they will be enough.

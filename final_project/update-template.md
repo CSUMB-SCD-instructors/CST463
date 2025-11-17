@@ -16,6 +16,8 @@
 ## Plan for next week
 
 ## Contributions
+In their own works, what are the contributions of each team member?
+
 ### [team member 1]
 
 ### [etc]

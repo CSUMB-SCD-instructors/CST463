@@ -4,10 +4,10 @@
 - [team member 1]
 - [etc]
 
-## Project goal
+## Project idea
 
 
-## Data Set 
+## Data Set
 
 
 ## Architectures to utilize
@@ -17,6 +17,3 @@
 
 
 ## Expected Computational Requirements
-
-
-
