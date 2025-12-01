@@ -21,7 +21,7 @@ This project definition is worth 10% of your overall project score.  Each team m
 Components:
 - (2 points) ***Project idea***.
   - The main thing is to describe your idea clearly.  If possible, begin by describing the problem that your system will solve.
-  - It should contain, at a minimum a ***baseine goal*** and a ***stretch goal*** that are reasonable.
+  - It should contain, at a minimum a ***baseline goal*** and a ***stretch goal*** that are reasonable.
 - (2 points) ***Data set***.
   - Give an overview of the data set and provide a link to the download page.
 - (2 points) ***Planned architecture***
