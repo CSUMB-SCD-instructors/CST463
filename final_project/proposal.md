@@ -22,6 +22,7 @@ Components:
 - (2 points) ***Project idea***.
   - The main thing is to describe your idea clearly.  If possible, begin by describing the problem that your system will solve.
   - It should contain, at a minimum a ***baseline goal*** and a ***stretch goal*** that are reasonable.
+  - Note: Your baseline will often be a target accuracy, but this might not be appropriate for all projects.  For example, if you are trying to train a model to identify different kinds of pastries, a reasonable baseline might be an off-the-self VGG since it probably knows a fair number of pastries, but might not be specialized on them.
 - (2 points) ***Data set***.
   - Give an overview of the data set and provide a link to the download page.
 - (2 points) ***Planned architecture***
